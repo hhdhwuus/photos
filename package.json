@@ -1,0 +1,39 @@
+{
+	"name": "photos",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check .",
+		"format": "prettier --write .",
+		"ios": "npm run build && npx cap sync && npx cap run ios",
+		"open:ios": "npm run build && npx cap sync && npx cap open ios"
+	},
+	"devDependencies": {
+		"@capacitor/android": "^6.1.1",
+		"@capacitor/ios": "^6.1.1",
+		"@sveltejs/adapter-auto": "^3.0.0",
+		"@sveltejs/adapter-static": "^3.0.2",
+		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0",
+		"prettier": "^3.1.1",
+		"prettier-plugin-svelte": "^3.1.2",
+		"svelte": "^4.2.7",
+		"svelte-check": "^3.6.0",
+		"tslib": "^2.4.1",
+		"typescript": "^5.0.0",
+		"vite": "^5.0.3"
+	},
+	"type": "module",
+	"dependencies": {
+		"@capacitor/cli": "^6.1.1",
+		"@capacitor/core": "^6.1.1",
+		"@ionic/core": "^8.2.5",
+		"ionic-svelte": "^0.5.84",
+		"swiper": "^11.1.5"
+	}
+}
