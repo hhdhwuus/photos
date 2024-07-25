@@ -214,7 +214,7 @@
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
-		grid-gap: 5px;
+		grid-gap: 4px;
 	}
 
 	.photo-grid .element {
