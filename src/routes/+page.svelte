@@ -27,7 +27,7 @@
 		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px)`;
 	}
 	$: if (fullscreenOverlay) {
-		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance + '';
+		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance / 500 + '';
 	}
 
 	onMount(async () => {
@@ -140,7 +140,7 @@
 				currentElement.style.width = width + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = (window.innerWidth - width) / 2 - rect.left + 'px';
-				currentElement.style.top = -rect.top + 'px';
+				currentElement.style.top = `calc(${-rect.top}px + var(--ion-safe-area-top))`;
 			}
 			currentElement.removeEventListener('transitionend', transitionEndClose);
 			currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
