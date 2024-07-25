@@ -8,6 +8,27 @@
 
 	let photos: Photo[] = []; // Array of photo objects
 	let content: HTMLIonContentElement;
+	let touching = false;
+	let touch = [0, 0];
+	let touchDistance = spring(0, {
+		stiffness: 0.5,
+		damping: 0.9
+	});
+	let touchTransform = spring([0, 0], {
+		stiffness: 0.1,
+		damping: 0.5
+	});
+	let fullscreenOverlayOpacity = spring(0, {
+		stiffness: 0.5,
+		damping: 0.9
+	});
+
+	$: if (currentElement) {
+		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px)`;
+	}
+	$: if (fullscreenOverlay) {
+		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance + '';
+	}
 
 	onMount(async () => {
 		photos = [
@@ -33,22 +54,56 @@
 			{ url: 'https://placehold.co/200x1800' }
 		];
 
-		window.addEventListener('touchstart', (event) => {});
+		window.addEventListener('touchstart', (event) => {
+			if (!open) {
+				return;
+			}
+			touching = true;
+			touch[0] = event.touches[0].clientX;
+			touch[1] = event.touches[0].clientY;
+		});
 
-		window.addEventListener('touchmove', (event) => {});
+		window.addEventListener('touchmove', (event) => {
+			if (!open) {
+				return;
+			}
+			if (touching === false) {
+				return;
+			}
+			if (!currentElement) {
+				return;
+			}
+			let x = event.touches[0].clientX;
+			let y = event.touches[0].clientY;
+			let dx = x - touch[0];
+			let dy = y - touch[1];
+			touchTransform.set([dx, dy]);
+			touchDistance.set(Math.sqrt(dx * dx + dy * dy));
+		});
 
-		window.addEventListener('touchend', (event) => {});
+		window.addEventListener('touchend', (event) => {
+			if (!open) {
+				return;
+			}
+			touching = false;
+			touchTransform.set([0, 0]);
+			if ($touchDistance > 50) {
+				closePhoto();
+			} else {
+				fullscreenOverlayOpacity.set(1);
+			}
+			touchDistance.set(0);
+		});
 	});
 
 	let open = false;
 	let opened = false;
-	let currentElement: HTMLDivElement;
-
-	$: console.log(open, opened);
+	let currentElement: HTMLDivElement | null;
+	let rect: DOMRect;
+	let fullscreenOverlay: HTMLDivElement;
 
 	function openPhoto(photo: Photo, event: MouseEvent) {
 		if (opened) {
-			closePhoto(event);
 			return;
 		}
 		if (open) {
@@ -57,26 +112,26 @@
 		console.log('opening');
 		open = true;
 		currentElement = event.target as HTMLDivElement;
-		if (!currentElement) {
-			return;
-		}
 		if (currentElement.classList.contains('photo-container') === false) {
 			return;
 		}
-		let rect = currentElement.getBoundingClientRect();
+		rect = currentElement.getBoundingClientRect();
 		let img = new Image();
 		img.src = photo.url;
 		img.onload = () => {
+			if (!currentElement) {
+				return;
+			}
 			let imgRatio = img.width / img.height;
 			let windowRatio = window.innerWidth / window.innerHeight;
 			content.scrollY = false;
 			currentElement.style.zIndex = '1000';
+			fullscreenOverlayOpacity.set(1);
 			if (imgRatio > windowRatio) {
 				let width = window.innerWidth;
 				let height = width / imgRatio;
 				currentElement.style.width = width + 'px';
 				currentElement.style.height = height + 'px';
-				console.log(width, height, window.innerWidth, window.innerHeight);
 				currentElement.style.left = -rect.left + 'px';
 				currentElement.style.top = (window.innerHeight - height) / 2 - rect.top + 'px';
 			} else {
@@ -92,9 +147,7 @@
 		};
 	}
 
-	function closePhoto(event: MouseEvent) {
-
-		currentElement = event.target as HTMLDivElement;
+	function closePhoto() {
 		if (!currentElement) {
 			return;
 		}
@@ -103,6 +156,7 @@
 		}
 		console.log('closing');
 		open = false;
+		fullscreenOverlayOpacity.set(0);
 		currentElement.style.width = '';
 		currentElement.style.height = '';
 		currentElement.style.left = '';
@@ -115,11 +169,18 @@
 		opened = true;
 	}
 
-	function transitionEndClose(e: TransitionEvent) {
+	function transitionEndClose() {
 		opened = false;
+		if (!content) {
+			return;
+		}
+		if (!currentElement) {
+			return;
+		}
 		content.scrollY = true;
-		let element = e.target as HTMLDivElement;
-		element.style.zIndex = '';
+		currentElement.style.zIndex = '';
+		currentElement.style.transform = '';
+		currentElement = null;
 	}
 </script>
 
@@ -147,7 +208,7 @@
 	</div>
 </ion-content>
 
-<div class="fullscreen-overlay {open ? 'active' : ''}"></div>
+<div class="fullscreen-overlay" bind:this={fullscreenOverlay}></div>
 
 <style>
 	.photo-grid {
@@ -184,14 +245,10 @@
 		height: 100%;
 		background-color: rgba(0, 0, 0, 1);
 		opacity: 0;
+		z-index: 999;
 		pointer-events: none;
-		transition-property: opacity;
 		transition-duration: 0.3s;
 		transition-timing-function: cubic-bezier(0.1, 0, 0.15, 1);
-	}
-
-	.fullscreen-overlay.active {
-		opacity: 1;
 	}
 
 	.clip {
