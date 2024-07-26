@@ -241,11 +241,35 @@
 				// You can access the original file using image.path, which can be
 				// passed to the Filesystem API to read the raw data of the image,
 				// if desired (or pass resultType: CameraResultType.Base64 to getPhoto)
-				var imageUrl = image.webPath;
+				let imageUrl = image.webPath;
+				if (!imageUrl) {
+					return;
+				}
+				photos.update((currentPhotos) => {
+				let photo = {
+					id: currentPhotos.length,
+					url: imageUrl,
+					loaded: false
+				};
+				let img = new Image();
+				img.src = photo.url;
+				img.onload = async () => {
+					photos.update((currentPhotos) => {
+						let photo = currentPhotos.find((photo) => photo.id === photo.id);
+						if (photo) {
+							photo.loaded = true;
+						}
+						return currentPhotos;
+					});
+					console.log('loaded ' + photo.loaded);
+				};
+				return [...currentPhotos, photo];
+			});
+			console.log(photos);
 			};
 		}}
 	>
-		<ion-icon name="camera"></ion-icon>
+		<CameraIcon />
 	</button>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -296,7 +320,7 @@
 			console.log(photos);
 		}}
 	>
-		<Camera />
+		<CameraIcon />
 	</ion-button>
 </ion-content>
 
