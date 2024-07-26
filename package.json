@@ -34,6 +34,7 @@
 		"@capacitor/core": "^6.1.1",
 		"@ionic/core": "^8.2.5",
 		"ionic-svelte": "^0.5.84",
+		"lucide-svelte": "^0.416.0",
 		"swiper": "^11.1.5"
 	}
 }
