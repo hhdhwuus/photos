@@ -287,6 +287,11 @@
 </ion-content>
 
 <style>
+
+	ion-content {
+		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
+	}
+
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
