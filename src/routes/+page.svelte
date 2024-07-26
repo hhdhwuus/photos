@@ -300,7 +300,6 @@
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
 		grid-gap: 4px;
 		z-index: 0;
-		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
 	}
 
 	.photo-grid .element {
