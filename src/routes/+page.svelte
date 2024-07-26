@@ -4,6 +4,7 @@
 	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
 	import { Camera, CameraResultType } from '@capacitor/camera';
+	import { scale } from 'svelte/transition';
 
 	type Photo = {
 		id: string;
@@ -24,13 +25,17 @@
 		stiffness: 0.1,
 		damping: 0.5
 	});
+	let scaleTransform = spring(1, {
+		stiffness: 0.1,
+		damping: 0.5
+	});
 	let fullscreenOverlayOpacity = spring(0, {
 		stiffness: 0.5,
 		damping: 0.9
 	});
 
 	$: if (currentElement) {
-		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px)`;
+		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px) scale(${$scaleTransform})`;
 	}
 	$: if (fullscreenOverlay) {
 		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance / 500 + '';
@@ -98,7 +103,6 @@
 				return;
 			}
 			touching = false;
-			touchTransform.set([0, 0]);
 			if ($touchDistance > 50) {
 				closePhoto();
 			} else {
@@ -122,7 +126,6 @@
 		if (open) {
 			return;
 		}
-		console.log('opening');
 		open = true;
 		currentElement = event.target as HTMLDivElement;
 		currentPhoto = photo;
@@ -143,6 +146,7 @@
 			let windowRatio = windowWidth / windowHeight;
 			content.scrollY = false;
 			currentElement.style.zIndex = '50';
+			fullscreenOverlay.style.zIndex = '40';
 			fullscreenOverlayOpacity.set(1);
 			if (imgRatio > windowRatio) {
 				let height = windowWidth / imgRatio;
@@ -164,15 +168,15 @@
 	}
 
 	function closePhoto() {
-		if (!currentElement) {
-			return;
-		}
 		if (opened === false) {
 			return;
 		}
-		console.log('closing');
 		open = false;
 		fullscreenOverlayOpacity.set(0);
+		touchTransform.set([0, 0]);
+		if (!currentElement) {
+			return;
+		}
 		currentElement.style.width = '';
 		currentElement.style.height = '';
 		currentElement.style.left = '';
@@ -187,72 +191,68 @@
 
 	function transitionEndClose() {
 		opened = false;
+		fullscreenOverlay.style.zIndex = '';
+		currentPhoto = null;
 		if (!content) {
 			return;
 		}
+		content.scrollY = true;
 		if (!currentElement) {
 			return;
 		}
-		content.scrollY = true;
 		currentElement.style.zIndex = '';
 		currentElement.style.transform = '';
 		currentElement = null;
-		currentPhoto = null;
 	}
 
 	async function addPhoto() {
-			const image = await Camera.getPhoto({
-				quality: 90,
-				allowEditing: false,
-				resultType: CameraResultType.Uri
-			});
-
-			let imageUrl = image.webPath;
-			if (!imageUrl) {
-				return;
-			}
-			photos.update((currentPhotos) => {
-				let photo = {
-					id: crypto.randomUUID(),
-					date: new Date(),
-					url: imageUrl,
-					loaded: false
-				};
-				let img = new Image();
-				img.src = photo.url;
-				img.onload = async () => {
-					photos.update((currentPhotos) => {
-						let updatedPhoto = currentPhotos.find((p) => p.id === photo.id);
-						if (updatedPhoto) {
-							updatedPhoto.loaded = true;
-						}
-						return currentPhotos;
-					});
-				};
-				return [...currentPhotos, photo, photo, photo, photo, photo, photo, photo];
-			});
+		const image = await Camera.getPhoto({
+			quality: 90,
+			allowEditing: true,
+			resultType: CameraResultType.Uri
+		});
+		console.log(image.exif);
+		let imageUrl = image.webPath;
+		if (!imageUrl) {
+			return;
 		}
-</script>
+		photos.update((currentPhotos) => {
+			let photo = {
+				id: crypto.randomUUID(),
+				date: new Date(),
+				url: imageUrl,
+				loaded: false
+			};
+			let img = new Image();
+			img.src = photo.url;
+			img.onload = async () => {
+				photos.update((currentPhotos) => {
+					let updatedPhoto = currentPhotos.find((p) => p.id === photo.id);
+					if (updatedPhoto) {
+						updatedPhoto.loaded = true;
+					}
+					return currentPhotos;
+				});
+			};
+			return [...currentPhotos, photo];
+		});
+	}
 
-<div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
-	<div class="container">
-		<h4>
-			{currentPhoto?.date.toLocaleDateString(navigator.language, {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			})}
-		</h4>
-		<div class="buttons">
-			<button>
-				<Trash2 strokeWidth="1.5" size="20" />
-			</button>
-			<button on:click={closePhoto}>
-				<X strokeWidth="1.5" />
-			</button>
-		</div>
-	</div>
-</div>
+	function deleteCurrentPhoto() {
+		if (!currentPhoto) {
+			return;
+		}
+		closePhoto();
+		fullscreenOverlayOpacity.set(0);
+		touchTransform.set([0, 0], { hard: true });
+		setTimeout(() => {
+			transitionEndClose();
+		}, 300);
+		photos.update((currentPhotos) => {
+			return currentPhotos.filter((p) => p.id !== currentPhoto.id);
+		});
+	}
+</script>
 
 <ion-header translucent>
 	<ion-toolbar>
@@ -267,10 +267,10 @@
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
 				<!-- <Image
-					class=""
-					photo={photo}
-					on:click={(event) => openPhoto(photo, event)}
-				></Image> -->
+			class=""
+			photo={photo}
+			on:click={(event) => openPhoto(photo, event)}
+			></Image> -->
 				{#if !photo.loaded}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
@@ -285,16 +285,32 @@
 			</div>
 		{/each}
 	</div>
-	<button
-		class="camera-button"
-		on:click={addPhoto}
-	>
+	<button class="camera-button" on:click={addPhoto}>
 		<CameraIcon />
 	</button>
 </ion-content>
 
-<style>
+<div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
+	<div class="container">
+		<h4>
+			{currentPhoto?.date.toLocaleDateString(navigator.language, {
+				day: 'numeric',
+				month: 'long',
+				year: 'numeric'
+			})}
+		</h4>
+		<div class="buttons">
+			<button on:click={deleteCurrentPhoto}>
+				<Trash2 strokeWidth="1.5" size="20" />
+			</button>
+			<button on:click={closePhoto}>
+				<X strokeWidth="1.5" />
+			</button>
+		</div>
+	</div>
+</div>
 
+<style>
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
@@ -335,16 +351,14 @@
 		width: 100%;
 		height: 100%;
 		background-color: rgba(0, 0, 0, 1);
-		opacity: 0;
-		z-index: 40;
-		pointer-events: none;
+		z-index: -10;
 		transition-duration: 0.3s;
 		transition-timing-function: cubic-bezier(0.1, 0, 0.15, 1);
 		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
 	}
 
 	.fullscreen-overlay .buttons {
-		position:relative;
+		position: relative;
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
@@ -360,12 +374,13 @@
 		height: 32px;
 		padding: 3px;
 		display: flex;
-		z-index: 100;
+		z-index: 1000;
 		justify-content: center;
 		align-items: center;
 	}
 
 	.fullscreen-overlay .container {
+		position: relative;
 		color: white;
 		width: 100%;
 		display: flex;
