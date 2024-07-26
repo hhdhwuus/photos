@@ -241,7 +241,7 @@
 			</div>
 		{/each}
 	</div>
-	<button
+	<button class="camera-button"
 		on:click={async () => {
 			const image = await Camera.getPhoto({
 				quality: 90,
@@ -288,15 +288,12 @@
 
 <style>
 
-	ion-content {
-		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
-	}
-
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
 		grid-gap: 4px;
 		z-index: 0;
+		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
 	}
 
 	.photo-grid .element {
@@ -371,5 +368,15 @@
 
 	.fullscreen-overlay h4 {
 		margin: 0;
+	}
+
+	.camera-button {
+		position: fixed;
+		bottom: 16px;
+		right: 16px;
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		z-index: 10;
 	}
 </style>
