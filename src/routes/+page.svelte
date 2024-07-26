@@ -345,6 +345,7 @@
 	}
 
 	.fullscreen-overlay .buttons {
+		position:relative;
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
@@ -353,6 +354,7 @@
 	.fullscreen-overlay .buttons button {
 		background-color: rgba(255, 255, 255, 0.25);
 		color: white;
+		position: relative;
 		border: none;
 		border-radius: 50%;
 		width: 32px;
