@@ -148,7 +148,7 @@
 				let height = window.innerHeight;
 				let width = height * imgRatio;
 				currentElement.style.width = width + 'px';
-				currentElement.style.height = `calc(${height}px - var(--ion-safe-area-bottom))`;
+				currentElement.style.height = `calc(${height}px - var(--ion-safe-area-bottom) - var(--ion-safe-area-top))`;
 				currentElement.style.left = (window.innerWidth - width) / 2 - rect.left + 'px';
 				currentElement.style.top = `calc(${-rect.top}px + var(--ion-safe-area-top))`;
 			}
@@ -167,7 +167,6 @@
 		console.log('closing');
 		open = false;
 		fullscreenOverlayOpacity.set(0);
-		currentElement.style.zIndex = '1';
 		currentElement.style.width = '';
 		currentElement.style.height = '';
 		currentElement.style.left = '';
