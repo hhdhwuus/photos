@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
-	import { Camera } from 'lucide-svelte';
+	import { Camera as CameraIcon } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
+	import { Camera, CameraResultType } from '@capacitor/camera';
 
 	type Photo = {
 		id: number;
@@ -196,7 +197,7 @@
 	let camera = false;
 </script>
 
-<ion-header translucent class={open ? 'hidden' : ''}>
+<ion-header translucent class={camera ? 'hidden' : ''}>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
 	</ion-toolbar>
@@ -227,61 +228,92 @@
 			</div>
 		{/each}
 	</div>
+	<button
+		on:click={() => {
+			const takePicture = async () => {
+				const image = await Camera.getPhoto({
+					quality: 90,
+					allowEditing: true,
+					resultType: CameraResultType.Uri
+				});
+
+				// image.webPath will contain a path that can be set as an image src.
+				// You can access the original file using image.path, which can be
+				// passed to the Filesystem API to read the raw data of the image,
+				// if desired (or pass resultType: CameraResultType.Base64 to getPhoto)
+				var imageUrl = image.webPath;
+			};
+		}}
+	>
+		<ion-icon name="camera"></ion-icon>
+	</button>
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<ion-button
+		on:click={() => {
+			let photoList = [
+				'https://placehold.co/600x400',
+				'https://placehold.co/800x600',
+				'https://placehold.co/1200x800',
+				'https://placehold.co/1600x1200',
+				'https://placehold.co/2000x1600',
+				'https://placehold.co/400x300',
+				'https://placehold.co/700x500',
+				'https://placehold.co/1000x700',
+				'https://placehold.co/1400x1000',
+				'https://placehold.co/1800x1400',
+				'https://placehold.co/500x800',
+				'https://placehold.co/900x1200',
+				'https://placehold.co/1300x1800',
+				'https://placehold.co/1700x2200',
+				'https://placehold.co/300x200',
+				'https://placehold.co/600x500',
+				'https://placehold.co/900x800',
+				'https://placehold.co/1200x1100',
+				'https://placehold.co/1500x1400',
+				'https://placehold.co/200x1800'
+			];
+			photos.update((currentPhotos) => {
+				let randomPhoto = {
+					id: currentPhotos.length,
+					url: photoList[Math.floor(Math.random() * photoList.length)],
+					loaded: false
+				};
+				let img = new Image();
+				img.src = randomPhoto.url;
+				img.onload = async () => {
+					photos.update((currentPhotos) => {
+						let photo = currentPhotos.find((photo) => photo.id === randomPhoto.id);
+						if (photo) {
+							photo.loaded = true;
+						}
+						return currentPhotos;
+					});
+					console.log('loaded ' + randomPhoto.loaded);
+				};
+				return [...currentPhotos, randomPhoto];
+			});
+			console.log(photos);
+		}}
+	>
+		<Camera />
+	</ion-button>
 </ion-content>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<ion-button
-	on:click={() => {
-		let photoList = [
-			'https://placehold.co/600x400',
-			'https://placehold.co/800x600',
-			'https://placehold.co/1200x800',
-			'https://placehold.co/1600x1200',
-			'https://placehold.co/2000x1600',
-			'https://placehold.co/400x300',
-			'https://placehold.co/700x500',
-			'https://placehold.co/1000x700',
-			'https://placehold.co/1400x1000',
-			'https://placehold.co/1800x1400',
-			'https://placehold.co/500x800',
-			'https://placehold.co/900x1200',
-			'https://placehold.co/1300x1800',
-			'https://placehold.co/1700x2200',
-			'https://placehold.co/300x200',
-			'https://placehold.co/600x500',
-			'https://placehold.co/900x800',
-			'https://placehold.co/1200x1100',
-			'https://placehold.co/1500x1400',
-			'https://placehold.co/200x1800'
-		];
-		photos.update((currentPhotos) => {
-			let randomPhoto = {
-				id: currentPhotos.length,
-				url: photoList[Math.floor(Math.random() * photoList.length)],
-				loaded: false
-			};
-			let img = new Image();
-			img.src = randomPhoto.url;
-			img.onload = async () => {
-				photos.update((currentPhotos) => {
-					let photo = currentPhotos.find((photo) => photo.id === randomPhoto.id);
-					if (photo) {
-						photo.loaded = true;
-					}
-					return currentPhotos;
-				});
-				console.log('loaded ' + randomPhoto.loaded);
-			};
-			return [...currentPhotos, randomPhoto];
-		});
-		console.log(photos);
-	}}
->
-	<Camera />
-</ion-button>
-
 <div class="camera {camera ? '' : 'inactive'}">camera</div>
+
+<ion-footer>
+	<ion-toolbar>
+		<ion-segment>
+			<ion-segment-button value="gallery" on:click={() => (camera = false)}>
+				<ion-label>Gallery</ion-label>
+			</ion-segment-button>
+			<ion-segment-button value="camera" on:click={() => (camera = true)}>
+				<ion-label>Camera</ion-label>
+			</ion-segment-button>
+		</ion-segment>
+	</ion-toolbar>
+</ion-footer>
 
 <div class="fullscreen-overlay" bind:this={fullscreenOverlay}></div>
 
@@ -302,6 +334,7 @@
 
 	.gallery {
 		transition: left 0.3s cubic-bezier(0.1, 0, 0.15, 1);
+		left: 0;
 	}
 
 	.gallery.inactive {
@@ -354,7 +387,12 @@
 		transition-timing-function: cubic-bezier(0.1, 0, 0.15, 1);
 	}
 
-	.clip {
-		overflow: clip;
+	ion-header {
+		transform: translateY(0);
+		transition: transform 0.3s cubic-bezier(0.1, 0, 0.15, 1);
+	}
+
+	ion-header.hidden {
+		transform: translateY(-100%);
 	}
 </style>
