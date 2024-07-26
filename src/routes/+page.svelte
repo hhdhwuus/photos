@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
-	import { Camera as CameraIcon, UploadCloudIcon } from 'lucide-svelte';
+	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
 	import { Camera, CameraResultType } from '@capacitor/camera';
 
@@ -111,6 +111,7 @@
 	let open = false;
 	let opened = false;
 	let currentElement: HTMLDivElement | null;
+	let currentPhoto: Photo | null;
 	let rect: DOMRect;
 	let fullscreenOverlay: HTMLDivElement;
 
@@ -124,6 +125,7 @@
 		console.log('opening');
 		open = true;
 		currentElement = event.target as HTMLDivElement;
+		currentPhoto = photo;
 		if (currentElement.classList.contains('photo-container') === false) {
 			return;
 		}
@@ -135,24 +137,26 @@
 				return;
 			}
 			let imgRatio = img.width / img.height;
-			let windowRatio = window.innerWidth / window.innerHeight;
+			let topPadding = fullscreenOverlay.firstElementChild?.clientHeight ?? 0;
+			let windowHeight = window.innerHeight - topPadding;
+			let windowWidth = window.innerWidth;
+			let windowRatio = windowWidth / windowHeight;
 			content.scrollY = false;
-			currentElement.style.zIndex = '100';
+			currentElement.style.zIndex = '50';
 			fullscreenOverlayOpacity.set(1);
 			if (imgRatio > windowRatio) {
-				let width = window.innerWidth;
-				let height = width / imgRatio;
-				currentElement.style.width = width + 'px';
+				let height = windowWidth / imgRatio;
+				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = -rect.left + 'px';
-				currentElement.style.top = (window.innerHeight - height) / 2 - rect.top + 'px';
+				currentElement.style.top = (windowHeight + topPadding - height) / 2 - rect.top + 'px';
 			} else {
-				let height = window.innerHeight;
+				let height = windowHeight;
 				let width = height * imgRatio;
 				currentElement.style.width = width + 'px';
 				currentElement.style.height = `calc(${height}px - var(--ion-safe-area-bottom) - var(--ion-safe-area-top))`;
-				currentElement.style.left = (window.innerWidth - width) / 2 - rect.left + 'px';
-				currentElement.style.top = `calc(${-rect.top}px + var(--ion-safe-area-top))`;
+				currentElement.style.left = (windowWidth - width) / 2 - rect.left + 'px';
+				currentElement.style.top = `calc(${-rect.top + topPadding}px + var(--ion-safe-area-top))`;
 			}
 			currentElement.removeEventListener('transitionend', transitionEndClose);
 			currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
@@ -193,16 +197,26 @@
 		currentElement.style.zIndex = '';
 		currentElement.style.transform = '';
 		currentElement = null;
+		currentPhoto = null;
 	}
 </script>
 
-<ion-header translucent>
-	<ion-toolbar>
-		<ion-title>Photos</ion-title>
-	</ion-toolbar>
-</ion-header>
+<div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
+	<div class="container">
+		<h4>{currentPhoto?.date.toLocaleDateString(navigator.language, {day: "numeric", month: "long", year: "numeric"})}</h4>
+		<div class="buttons">
+			<button>
+				<Trash2 strokeWidth="1.5" size="20" />
+			</button>
+			<button on:click={closePhoto}>
+				<X strokeWidth="1.5" />
+			</button>
+		</div>
+	</div>
+</div>
 
-<ion-content  fullscreen bind:this={content}>
+
+<ion-content fullscreen bind:this={content}>
 	<div class="photo-grid">
 		{#each $photos as photo}
 			<div class="element">
@@ -232,14 +246,14 @@
 			const image = await Camera.getPhoto({
 				quality: 90,
 				allowEditing: false,
-				resultType: CameraResultType.Uri
+				resultType: CameraResultType.DataUrl
 			});
 
 			// image.webPath will contain a path that can be set as an image src.
 			// You can access the original file using image.path, which can be
 			// passed to the Filesystem API to read the raw data of the image,
 			// if desired (or pass resultType: CameraResultType.Base64 to getPhoto)
-			let imageUrl = image.webPath;
+			let imageUrl = image.dataUrl;
 			console.log(imageUrl);
 			if (!imageUrl) {
 				return;
@@ -270,16 +284,14 @@
 	>
 		<CameraIcon />
 	</button>
-
 </ion-content>
-
-<div class="fullscreen-overlay" bind:this={fullscreenOverlay}></div>
 
 <style>
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
 		grid-gap: 4px;
+		z-index: 0;
 	}
 
 	.photo-grid .element {
@@ -316,9 +328,43 @@
 		height: 100%;
 		background-color: rgba(0, 0, 0, 1);
 		opacity: 0;
-		z-index: 90;
+		z-index: 40;
 		pointer-events: none;
 		transition-duration: 0.3s;
 		transition-timing-function: cubic-bezier(0.1, 0, 0.15, 1);
+	}
+
+	.fullscreen-overlay .buttons {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		gap: 16px;
+	}
+	.fullscreen-overlay .buttons button {
+		background-color: rgba(255, 255, 255, 0.25);
+		color: white;
+		border: none;
+		border-radius: 50%;
+		width: 32px;
+		height: 32px;
+		padding: 3px;
+		display: flex;
+		z-index: 100;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.fullscreen-overlay .container {
+		color: white;
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+		padding: 16px;
+	}
+
+	.fullscreen-overlay h4 {
+		margin: 0;
 	}
 </style>
