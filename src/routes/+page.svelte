@@ -4,33 +4,37 @@
 	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-	import { scale } from 'svelte/transition';
 	import { photosStore, type Photo } from '$lib/photos';
 
 	let content: HTMLIonContentElement;
 	let touching = false;
-	let touch = [0, 0];
+	let initialTouchPosition = [0, 0];
+	let lastTouchPosition = [0, 0];
+	let zooming = false;
+	let initialZoomDistance = 0;
+	let lastZoomScale = 1;
 	let touchDistance = spring(0, {
-		stiffness: 0.5,
-		damping: 0.9
+		stiffness: 0.2,
+		damping: 1
 	});
 	let touchTransform = spring([0, 0], {
 		stiffness: 0.1,
 		damping: 0.5
 	});
 	let scaleTransform = spring(1, {
-		stiffness: 0.1,
-		damping: 0.5
+		stiffness: 0.5,
+		damping: 1
 	});
 	let fullscreenOverlayOpacity = spring(0, {
-		stiffness: 0.5,
-		damping: 0.9
+		stiffness: 0.2,
+		damping: 1
 	});
 
 	$: if (currentElement) {
 		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px) scale(${$scaleTransform})`;
+		rect = currentElement.getBoundingClientRect();
 	}
-	$: if (fullscreenOverlay) {
+	$: if (fullscreenOverlay && !zooming) {
 		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance / 500 + '';
 	}
 
@@ -45,8 +49,9 @@
 			if (!currentElement) {
 				return;
 			}
-			let dx = x - touch[0];
-			let dy = y - touch[1];
+
+			let dx = x - initialTouchPosition[0];
+			let dy = y - initialTouchPosition[1];
 			touchTransform.set([dx, dy]);
 			touchDistance.set(Math.sqrt(dx * dx + dy * dy));
 		}
@@ -55,13 +60,46 @@
 			if (!open) {
 				return;
 			}
-			touching = true;
-			touch[0] = event.touches[0].clientX;
-			touch[1] = event.touches[0].clientY;
+			// more than one finger
+			if (event.touches.length > 1) {
+				zooming = true;
+				let dx = event.touches[0].clientX - event.touches[1].clientX;
+				let dy = event.touches[0].clientY - event.touches[1].clientY;
+				initialTouchPosition[0] = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+				initialTouchPosition[1] = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+				initialZoomDistance = Math.sqrt(dx * dx + dy * dy);
+			}
+			// one finger
+			if (event.touches.length === 1) {
+				touching = true;
+				initialTouchPosition[0] = event.touches[0].clientX;
+				initialTouchPosition[1] = event.touches[0].clientY;
+			}
 		});
 
 		window.addEventListener('touchmove', (event) => {
-			handleMove(event.touches[0].clientX, event.touches[0].clientY);
+			if (!open || !touching) {
+				return;
+			}
+
+			if (event.touches.length > 1 && zooming) {
+				let xx = event.touches[0].clientX - event.touches[1].clientX;
+				let yy = event.touches[0].clientY - event.touches[1].clientY;
+				let x = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+				let y = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+				let dx = x - initialTouchPosition[0] + lastTouchPosition[0];
+				let dy = y - initialTouchPosition[1] + lastTouchPosition[1];
+				touchTransform.set([dx, dy]);
+				let distance = Math.sqrt(xx * xx + yy * yy);
+				let scale = lastZoomScale * (distance / initialZoomDistance);
+				scaleTransform.set(scale)
+				return;
+			} else {
+				let dx = event.touches[0].clientX - initialTouchPosition[0] + lastTouchPosition[0];
+				let dy = event.touches[0].clientY - initialTouchPosition[1] + lastTouchPosition[1];
+				touchTransform.set([dx, dy]);
+				touchDistance.set(Math.sqrt(dx * dx + dy * dy));
+			}
 		});
 
 		window.addEventListener('touchend', (event) => {
@@ -69,13 +107,18 @@
 				return;
 			}
 			touching = false;
+			if (zooming) {
+				lastZoomScale = $scaleTransform;
+				lastTouchPosition = $touchTransform;
+				return;
+			}
 			touchTransform.set([0, 0]);
+			console.log($scaleTransform);
+			scaleTransform.set(1);
+			touchDistance.set(0);
 			if ($touchDistance > 50) {
 				closePhoto();
-			} else {
-				fullscreenOverlayOpacity.set(1);
 			}
-			touchDistance.set(0);
 		});
 
 		window.addEventListener('mousedown', (event) => {
@@ -83,8 +126,8 @@
 				return;
 			}
 			touching = true;
-			touch[0] = event.clientX;
-			touch[1] = event.clientY;
+			initialTouchPosition[0] = event.clientX;
+			initialTouchPosition[1] = event.clientY;
 		});
 
 		window.addEventListener('mousemove', (event) => {
@@ -104,6 +147,10 @@
 			}
 			touchDistance.set(0);
 		});
+
+		topPadding =
+			(fullscreenOverlay.firstElementChild?.clientHeight ?? 0) +
+			parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top'));
 	});
 
 	let open = false;
@@ -112,6 +159,14 @@
 	let currentPhoto: Photo | null;
 	let rect: DOMRect;
 	let fullscreenOverlay: HTMLDivElement;
+	let ionSafeAreaBottom = parseInt(
+		getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
+	);
+	let topPadding = 0;
+	let windowHeight = window.innerHeight - topPadding + ionSafeAreaBottom;
+	let windowWidth = window.innerWidth;
+	let windowRatio = windowWidth / windowHeight;
+	let imgRatio = 1;
 
 	function openPhoto(photo: Photo, event: MouseEvent) {
 		if (opened) {
@@ -133,21 +188,11 @@
 			if (!currentElement) {
 				return;
 			}
-			let imgRatio = img.width / img.height;
-			let ionSafeAreaTop = parseInt(
-				getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top')
-			);
-			let ionSafeAreaBottom = parseInt(
-				getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
-			);
-			let topPadding = (fullscreenOverlay.firstElementChild?.clientHeight ?? 0) + ionSafeAreaTop;
-			let windowHeight = window.innerHeight - topPadding + ionSafeAreaBottom;
-			let windowWidth = window.innerWidth;
-			let windowRatio = windowWidth / windowHeight;
+			imgRatio = img.width / img.height;
 			content.scrollY = false;
-			currentElement.style.zIndex = '50';
 			fullscreenOverlay.style.zIndex = '40';
 			fullscreenOverlayOpacity.set(1);
+			currentElement.style.zIndex = '50';
 			if (imgRatio > windowRatio) {
 				let height = windowWidth / imgRatio;
 				currentElement.style.width = windowWidth + 'px';
@@ -155,7 +200,7 @@
 				currentElement.style.left = -rect.left + 'px';
 				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top);
 				currentElement.style.top =
-					Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top + 'px';
+					Math.max((windowHeight - height) / 2, topPadding) - rect.top + 'px';
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
@@ -174,8 +219,12 @@
 			return;
 		}
 		open = false;
+		zooming = false;
 		fullscreenOverlayOpacity.set(0);
 		touchTransform.set([0, 0]);
+		scaleTransform.set(1);
+		lastTouchPosition = [0, 0];
+		lastZoomScale = 1;
 		if (!currentElement) {
 			return;
 		}
@@ -189,6 +238,10 @@
 
 	function transitionEndOpen() {
 		opened = true;
+		if (!currentElement) {
+			return;
+		}
+		rect = currentElement.getBoundingClientRect();
 	}
 
 	function transitionEndClose() {
@@ -322,6 +375,10 @@
 </div>
 
 <style>
+	* {
+		user-select: none;
+	}
+
 	.photo-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(100px, 1fr));
@@ -363,8 +420,6 @@
 		height: 100%;
 		background-color: rgba(0, 0, 0, 1);
 		z-index: -10;
-		transition-duration: 0.3s;
-		transition-timing-function: cubic-bezier(0.1, 0, 0.15, 1);
 		padding: var(--ion-safe-area-top) 0 var(--ion-safe-area-bottom) 0;
 	}
 
