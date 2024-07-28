@@ -36,28 +36,28 @@ function createPhotosStore() {
         {
             id: "c1c2c3c4-c5c6-c7c8-c9c0-1d2d3d4d5d6",
             date: new Date('2021-08-06T12:00:00Z'),
-            url: 'https://picsum.photos/1200/1300'
-        },
-        {
-            id: "f1f2f3f4-f5f6-f7f8-f9f0-1e2e3e4e5e6",
-            date: new Date('2021-08-07T12:00:00Z'),
-            url: 'https://picsum.photos/1400/1500'
+            url: 'https://picsum.photos/1550/800'
         },
         {
             id: "g1g2g3g4-g5g6-g7g8-g9g0-1f2f3f4f5f6",
             date: new Date('2021-08-08T12:00:00Z'),
-            url: 'https://picsum.photos/1600/1700'
+            url: 'https://picsum.photos/1600/800'
         },
         {
             id: "h1h2h3h4-h5h6-h7h8-h9h0-1g2g3g4g5g6",
             date: new Date('2021-08-09T12:00:00Z'),
-            url: 'https://picsum.photos/1800/1900'
+            url: 'https://picsum.photos/1650/800'
         },
         {
             id: "i1i2i3i4-i5i6-i7i8-i9i0-1h2h3h4h5h6",
             date: new Date('2021-08-10T12:00:00Z'),
-            url: 'https://picsum.photos/2000/2100'
-        }
+            url: 'https://picsum.photos/1700/800'
+        },
+        {
+            id: "f1f2f3f4-f5f6-f7f8-f9f0-1e2e3e4e5e6",
+            date: new Date('2021-08-07T12:00:00Z'),
+            url: 'https://picsum.photos/1750/800'
+        },
     ];
 
     const { subscribe, update } = writable<Photo[]>(initialPhotos);
