@@ -3,17 +3,10 @@
 	import { spring } from 'svelte/motion';
 	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
-	import { Camera, CameraResultType } from '@capacitor/camera';
+	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { scale } from 'svelte/transition';
+	import { photosStore, type Photo } from '$lib/photos';
 
-	type Photo = {
-		id: string;
-		date: Date;
-		url: string;
-		loaded: boolean;
-	};
-
-	let photos = writable<Photo[]>([]); // Array of photo objects
 	let content: HTMLIonContentElement;
 	let touching = false;
 	let touch = [0, 0];
@@ -103,6 +96,7 @@
 				return;
 			}
 			touching = false;
+			touchTransform.set([0, 0]);
 			if ($touchDistance > 50) {
 				closePhoto();
 			} else {
@@ -143,7 +137,7 @@
 			let topPadding = fullscreenOverlay.firstElementChild?.clientHeight ?? 0;
 			let windowHeight = window.innerHeight - topPadding;
 			let windowWidth = window.innerWidth;
-			let windowRatio = windowWidth / windowHeight;
+			let windowRatio = windowWidth / (windowHeight);
 			content.scrollY = false;
 			currentElement.style.zIndex = '50';
 			fullscreenOverlay.style.zIndex = '40';
@@ -153,7 +147,8 @@
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = -rect.left + 'px';
-				currentElement.style.top = (windowHeight + topPadding - height) / 2 - rect.top + 'px';
+				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top)
+				currentElement.style.top = Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top + 'px';
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
@@ -207,35 +202,43 @@
 
 	async function addPhoto() {
 		const image = await Camera.getPhoto({
-			quality: 90,
+			quality: 100,
 			allowEditing: true,
-			resultType: CameraResultType.Uri
+			resultType: CameraResultType.DataUrl,
+			source: CameraSource.Camera
 		});
 		console.log(image.exif);
-		let imageUrl = image.webPath;
+		let imageUrl = image.dataUrl;
 		if (!imageUrl) {
 			return;
 		}
-		photos.update((currentPhotos) => {
-			let photo = {
-				id: crypto.randomUUID(),
-				date: new Date(),
-				url: imageUrl,
-				loaded: false
-			};
-			let img = new Image();
-			img.src = photo.url;
-			img.onload = async () => {
-				photos.update((currentPhotos) => {
-					let updatedPhoto = currentPhotos.find((p) => p.id === photo.id);
-					if (updatedPhoto) {
-						updatedPhoto.loaded = true;
-					}
-					return currentPhotos;
-				});
-			};
-			return [...currentPhotos, photo];
-		});
+
+		let photo: Photo = {
+			id: crypto.randomUUID(),
+			date: new Date(),
+			url: imageUrl
+		};
+		photosStore.add(photo);
+		// photos.update((currentPhotos) => {
+		// 	let photo = {
+		// 		id: crypto.randomUUID(),
+		// 		date: new Date(),
+		// 		url: imageUrl,
+		// 		loaded: false
+		// 	};
+		// 	let img = new Image();
+		// 	img.src = photo.url;
+		// 	img.onload = async () => {
+		// 		photos.update((currentPhotos) => {
+		// 			let updatedPhoto = currentPhotos.find((p) => p.id === photo.id);
+		// 			if (updatedPhoto) {
+		// 				updatedPhoto.loaded = true;
+		// 			}
+		// 			return currentPhotos;
+		// 		});
+		// 	};
+		// 	return [...currentPhotos, photo];
+		// });
 	}
 
 	function deleteCurrentPhoto() {
@@ -248,9 +251,10 @@
 		setTimeout(() => {
 			transitionEndClose();
 		}, 300);
-		photos.update((currentPhotos) => {
-			return currentPhotos.filter((p) => p.id !== currentPhoto.id);
-		});
+		photosStore.remove(currentPhoto.id);
+		// photos.update((currentPhotos) => {
+		// 	return currentPhotos.filter((p) => p.id !== currentPhoto.id);
+		// });
 	}
 </script>
 
@@ -262,7 +266,7 @@
 
 <ion-content fullscreen bind:this={content}>
 	<div class="photo-grid">
-		{#each $photos as photo}
+		{#each $photosStore as photo}
 			<div class="element">
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-interactive-supports-focus -->
@@ -271,7 +275,7 @@
 			photo={photo}
 			on:click={(event) => openPhoto(photo, event)}
 			></Image> -->
-				{#if !photo.loaded}
+				{#if false}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
 					<div
@@ -366,21 +370,22 @@
 	}
 	.fullscreen-overlay .buttons button {
 		background-color: rgba(255, 255, 255, 0.25);
-		color: white;
 		position: relative;
+		color: white;
 		border: none;
 		border-radius: 50%;
 		width: 32px;
 		height: 32px;
 		padding: 3px;
 		display: flex;
-		z-index: 1000;
 		justify-content: center;
 		align-items: center;
+		z-index: 70
 	}
-
+	
 	.fullscreen-overlay .container {
 		position: relative;
+		z-index: 70;
 		color: white;
 		width: 100%;
 		display: flex;
@@ -392,6 +397,7 @@
 
 	.fullscreen-overlay h4 {
 		margin: 0;
+		z-index: 70
 	}
 
 	.camera-button {
