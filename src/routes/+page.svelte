@@ -134,10 +134,16 @@
 				return;
 			}
 			let imgRatio = img.width / img.height;
-			let topPadding = fullscreenOverlay.firstElementChild?.clientHeight ?? 0;
-			let windowHeight = window.innerHeight - topPadding;
+			let ionSafeAreaTop = parseInt(
+				getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top')
+			);
+			let ionSafeAreaBottom = parseInt(
+				getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
+			);
+			let topPadding = (fullscreenOverlay.firstElementChild?.clientHeight ?? 0) + ionSafeAreaTop;
+			let windowHeight = window.innerHeight - topPadding + ionSafeAreaBottom;
 			let windowWidth = window.innerWidth;
-			let windowRatio = windowWidth / (windowHeight);
+			let windowRatio = windowWidth / windowHeight;
 			content.scrollY = false;
 			currentElement.style.zIndex = '50';
 			fullscreenOverlay.style.zIndex = '40';
@@ -147,15 +153,16 @@
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = -rect.left + 'px';
-				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top)
-				currentElement.style.top = Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top + 'px';
+				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top);
+				currentElement.style.top =
+					Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top + 'px';
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
 				currentElement.style.width = width + 'px';
-				currentElement.style.height = `calc(${height}px - var(--ion-safe-area-bottom) - var(--ion-safe-area-top))`;
+				currentElement.style.height = height + 'px';
 				currentElement.style.left = (windowWidth - width) / 2 - rect.left + 'px';
-				currentElement.style.top = `calc(${-rect.top + topPadding}px + var(--ion-safe-area-top))`;
+				currentElement.style.top = topPadding - rect.top + 'px';
 			}
 			currentElement.removeEventListener('transitionend', transitionEndClose);
 			currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
@@ -380,9 +387,9 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		z-index: 70
+		z-index: 70;
 	}
-	
+
 	.fullscreen-overlay .container {
 		position: relative;
 		z-index: 70;
@@ -397,7 +404,7 @@
 
 	.fullscreen-overlay h4 {
 		margin: 0;
-		z-index: 70
+		z-index: 70;
 	}
 
 	.camera-button {
