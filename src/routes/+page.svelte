@@ -141,7 +141,7 @@
 				getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
 			);
 			let topPadding = (fullscreenOverlay.firstElementChild?.clientHeight ?? 0) + ionSafeAreaTop;
-			let windowHeight = window.innerHeight - topPadding + ionSafeAreaBottom;
+			let windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 			let windowWidth = window.innerWidth;
 			let windowRatio = windowWidth / windowHeight;
 			content.scrollY = false;
