@@ -8,21 +8,25 @@
 
 	let content: HTMLIonContentElement;
 	let touching = false;
-	let initialTouchPosition = [0, 0];
-	let lastTouchPosition = [0, 0];
 	let zooming = false;
+	let rect = { top: 0, left: 0, width: 0, height: 0 };
 	let initialZoomDistance = 0;
 	let lastZoomScale = 1;
+	let zoomOrigin = [50, 50];
 	let touchDistance = spring(0, {
 		stiffness: 0.2,
 		damping: 1
 	});
-	let touchTransform = spring([0, 0], {
+	let initialTouchPosition = [0, 0];
+	let lastTouchPosition = [0, 0];
+	let touchTransform = [0, 0];
+	let touchTransformSpring = spring(touchTransform, {
 		stiffness: 0.1,
 		damping: 0.5
 	});
-	let scaleTransform = spring(1, {
-		stiffness: 0.5,
+	let scaleTransform = 1;
+	let scaleTransformSpring = spring(1, {
+		stiffness: 0.2,
 		damping: 1
 	});
 	let fullscreenOverlayOpacity = spring(0, {
@@ -31,42 +35,32 @@
 	});
 
 	$: if (currentElement) {
-		currentElement.style.transform = `translate(${$touchTransform[0]}px, ${$touchTransform[1]}px) scale(${$scaleTransform})`;
-		rect = currentElement.getBoundingClientRect();
+		currentElement.style.transform = `translate(${$touchTransformSpring[0]}px, ${$touchTransformSpring[1]}px) scale(${$scaleTransformSpring})`;
+	}
+	$: if (currentElement) {
+		currentRect = currentElement.getBoundingClientRect();
 	}
 	$: if (fullscreenOverlay && !zooming) {
 		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance / 500 + '';
 	}
 
 	onMount(async () => {
-		function handleMove(x: number, y: number) {
-			if (!open) {
-				return;
-			}
-			if (!touching) {
-				return;
-			}
-			if (!currentElement) {
-				return;
-			}
-
-			let dx = x - initialTouchPosition[0];
-			let dy = y - initialTouchPosition[1];
-			touchTransform.set([dx, dy]);
-			touchDistance.set(Math.sqrt(dx * dx + dy * dy));
-		}
-
 		window.addEventListener('touchstart', (event) => {
 			if (!open) {
 				return;
 			}
+
+			rect = currentRect;
 			// more than one finger
 			if (event.touches.length > 1) {
 				zooming = true;
 				let dx = event.touches[0].clientX - event.touches[1].clientX;
 				let dy = event.touches[0].clientY - event.touches[1].clientY;
-				initialTouchPosition[0] = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-				initialTouchPosition[1] = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+				let centerx = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+				let centery = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+				initialTouchPosition[0] = centerx;
+				initialTouchPosition[1] = centery;
+				zoomOrigin = [(centerx - rect.left) / rect.width, (centery - rect.top) / rect.height];
 				initialZoomDistance = Math.sqrt(dx * dx + dy * dy);
 			}
 			// one finger
@@ -75,30 +69,47 @@
 				initialTouchPosition[0] = event.touches[0].clientX;
 				initialTouchPosition[1] = event.touches[0].clientY;
 			}
+			console.log('touchstart');
 		});
 
 		window.addEventListener('touchmove', (event) => {
 			if (!open || !touching) {
 				return;
 			}
-
-			if (event.touches.length > 1 && zooming) {
-				let xx = event.touches[0].clientX - event.touches[1].clientX;
-				let yy = event.touches[0].clientY - event.touches[1].clientY;
-				let x = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-				let y = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-				let dx = x - initialTouchPosition[0] + lastTouchPosition[0];
-				let dy = y - initialTouchPosition[1] + lastTouchPosition[1];
-				touchTransform.set([dx, dy]);
-				let distance = Math.sqrt(xx * xx + yy * yy);
-				let scale = lastZoomScale * (distance / initialZoomDistance);
-				scaleTransform.set(scale)
+			if (!currentElement) {
 				return;
+			}
+			if (zooming) {
+				if (event.touches.length > 1) {
+					let distancex = event.touches[0].clientX - event.touches[1].clientX;
+					let distancey = event.touches[0].clientY - event.touches[1].clientY;
+					let centerx = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+					let centery = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+
+					let distance = Math.sqrt(distancex * distancex + distancey * distancey);
+					let scale = distance / initialZoomDistance;
+
+					let offsetX = (zoomOrigin[0] - 0.5) * rect.width * (1 - scale);
+					let offsetY = (zoomOrigin[1] - 0.5) * rect.height * (1 - scale);
+					let dx = centerx - initialTouchPosition[0] + lastTouchPosition[0] + offsetX;
+					let dy = centery - initialTouchPosition[1] + lastTouchPosition[1] + offsetY;
+					// console.log(offsetX, offsetY, zoomOrigin, scale, rect.width, rect.height);
+
+					touchTransform = [dx, dy];
+					scaleTransform = lastZoomScale * scale;
+				} else {
+					let dx = event.touches[0].clientX - initialTouchPosition[0] + lastTouchPosition[0];
+					let dy = event.touches[0].clientY - initialTouchPosition[1] + lastTouchPosition[1];
+					touchTransform = [dx, dy];
+				}
+				scaleTransformSpring.set(scaleTransform);
+				touchTransformSpring.set(touchTransform);
 			} else {
 				let dx = event.touches[0].clientX - initialTouchPosition[0] + lastTouchPosition[0];
 				let dy = event.touches[0].clientY - initialTouchPosition[1] + lastTouchPosition[1];
-				touchTransform.set([dx, dy]);
 				touchDistance.set(Math.sqrt(dx * dx + dy * dy));
+				touchTransform = [dx, dy];
+				touchTransformSpring.set(touchTransform);
 			}
 		});
 
@@ -108,62 +119,108 @@
 			}
 			touching = false;
 			if (zooming) {
-				lastZoomScale = $scaleTransform;
-				lastTouchPosition = $touchTransform;
-				return;
-			}
-			touchTransform.set([0, 0]);
-			console.log($scaleTransform);
-			scaleTransform.set(1);
-			touchDistance.set(0);
-			if ($touchDistance > 50) {
-				closePhoto();
-			}
-		});
+				if (event.touches.length > 0) {
+					return;
+				}
+				if ($scaleTransformSpring < 0.7) {
+					closePhoto();
+					return;
+				}
+				if ($scaleTransformSpring < 1) {
+					scaleTransform = 1;
+					zooming = false;
+				}
+				// if ($scaleTransformSpring > 3) {
+				// 	scaleTransform = 3;
+				// }
+				
+				if (currentRect.height > windowHeight) {
+					if (currentRect.top > topPadding) {
+						touchTransform[1] = $touchTransformSpring[1] + topPadding - currentRect.top;
+					}
+					if (currentRect.bottom < windowHeight + topPadding) {
+						touchTransform[1] = $touchTransformSpring[1] + window.innerHeight - currentRect.bottom;
+					}
+				} else {
+					console.log('height', currentRect.height, windowHeight);
+					touchTransform[1] = 0;
+				}
+				if (currentRect.width > windowWidth) {
+					if (currentRect.left > 0) {
+						touchTransform[0] = $touchTransformSpring[0] - currentRect.left;
+					}
+					if (currentRect.left + currentRect.width < windowWidth) {
+						touchTransform[0] = $touchTransformSpring[0] + windowWidth - currentRect.right;
+					}
+				} else {
+					console.log('width', currentRect.width, windowWidth);
+					touchTransform[0] = 0;
+				}
+				lastZoomScale = scaleTransform;
+				lastTouchPosition = [...touchTransform];
 
-		window.addEventListener('mousedown', (event) => {
-			if (!open) {
+				console.log('touchend', touchTransform, scaleTransform);
+				// touchTransformSpring.set(touchTransform, { hard: false });
+				scaleTransformSpring.set(scaleTransform, { hard: false });
+				touchTransformSpring.set(touchTransform, { hard: false });
 				return;
-			}
-			touching = true;
-			initialTouchPosition[0] = event.clientX;
-			initialTouchPosition[1] = event.clientY;
-		});
-
-		window.addEventListener('mousemove', (event) => {
-			handleMove(event.clientX, event.clientY);
-		});
-
-		window.addEventListener('mouseup', (event) => {
-			if (!open) {
-				return;
-			}
-			touching = false;
-			touchTransform.set([0, 0]);
-			if ($touchDistance > 50) {
-				closePhoto();
 			} else {
-				fullscreenOverlayOpacity.set(1);
+				touchTransform = [0, 0];
+				scaleTransform = 1;
+
+				touchTransformSpring.set(touchTransform);
+				scaleTransformSpring.set(scaleTransform);
+				if ($touchDistance > 50) {
+					closePhoto();
+				}
+				touchDistance.set(0);
 			}
-			touchDistance.set(0);
 		});
+
+		// window.addEventListener('mousedown', (event) => {
+		// 	if (!open) {
+		// 		return;
+		// 	}
+		// 	touching = true;
+		// 	initialTouchPosition[0] = event.clientX;
+		// 	initialTouchPosition[1] = event.clientY;
+		// });
+
+		// window.addEventListener('mousemove', (event) => {
+		// 	handleMove(event.clientX, event.clientY);
+		// });
+
+		// window.addEventListener('mouseup', (event) => {
+		// 	if (!open) {
+		// 		return;
+		// 	}
+		// 	touching = false;
+		// 	touchTransformSpring.set([0, 0]);
+		// 	if ($touchDistance > 50) {
+		// 		closePhoto();
+		// 	} else {
+		// 		fullscreenOverlayOpacity.set(1);
+		// 	}
+		// 	touchDistance.set(0);
+		// });
 
 		topPadding =
 			(fullscreenOverlay.firstElementChild?.clientHeight ?? 0) +
 			parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top'));
+		windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 	});
 
 	let open = false;
 	let opened = false;
 	let currentElement: HTMLDivElement | null;
 	let currentPhoto: Photo | null;
-	let rect: DOMRect;
+	let currentRect: DOMRect;
 	let fullscreenOverlay: HTMLDivElement;
 	let ionSafeAreaBottom = parseInt(
 		getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
 	);
 	let topPadding = 0;
-	let windowHeight = window.innerHeight - topPadding + ionSafeAreaBottom;
+	let windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 	let windowWidth = window.innerWidth;
 	let windowRatio = windowWidth / windowHeight;
 	let imgRatio = 1;
@@ -193,6 +250,7 @@
 			fullscreenOverlay.style.zIndex = '40';
 			fullscreenOverlayOpacity.set(1);
 			currentElement.style.zIndex = '50';
+			// left to right
 			if (imgRatio > windowRatio) {
 				let height = windowWidth / imgRatio;
 				currentElement.style.width = windowWidth + 'px';
@@ -201,6 +259,7 @@
 				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top);
 				currentElement.style.top =
 					Math.max((windowHeight - height) / 2, topPadding) - rect.top + 'px';
+				// top to bottom
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
@@ -218,11 +277,14 @@
 		if (opened === false) {
 			return;
 		}
+		console.trace();
 		open = false;
 		zooming = false;
 		fullscreenOverlayOpacity.set(0);
-		touchTransform.set([0, 0]);
-		scaleTransform.set(1);
+		touchTransform = [0, 0];
+		touchTransformSpring.set(touchTransform);
+		scaleTransform = 1;
+		scaleTransformSpring.set(scaleTransform);
 		lastTouchPosition = [0, 0];
 		lastZoomScale = 1;
 		if (!currentElement) {
@@ -241,7 +303,7 @@
 		if (!currentElement) {
 			return;
 		}
-		rect = currentElement.getBoundingClientRect();
+		currentRect = currentElement.getBoundingClientRect();
 	}
 
 	function transitionEndClose() {
@@ -279,26 +341,6 @@
 			url: imageUrl
 		};
 		photosStore.add(photo);
-		// photos.update((currentPhotos) => {
-		// 	let photo = {
-		// 		id: crypto.randomUUID(),
-		// 		date: new Date(),
-		// 		url: imageUrl,
-		// 		loaded: false
-		// 	};
-		// 	let img = new Image();
-		// 	img.src = photo.url;
-		// 	img.onload = async () => {
-		// 		photos.update((currentPhotos) => {
-		// 			let updatedPhoto = currentPhotos.find((p) => p.id === photo.id);
-		// 			if (updatedPhoto) {
-		// 				updatedPhoto.loaded = true;
-		// 			}
-		// 			return currentPhotos;
-		// 		});
-		// 	};
-		// 	return [...currentPhotos, photo];
-		// });
 	}
 
 	function deleteCurrentPhoto() {
@@ -307,14 +349,11 @@
 		}
 		closePhoto();
 		fullscreenOverlayOpacity.set(0);
-		touchTransform.set([0, 0], { hard: true });
+		touchTransformSpring.set([0, 0], { hard: true });
 		setTimeout(() => {
 			transitionEndClose();
 		}, 300);
 		photosStore.remove(currentPhoto.id);
-		// photos.update((currentPhotos) => {
-		// 	return currentPhotos.filter((p) => p.id !== currentPhoto.id);
-		// });
 	}
 </script>
 
