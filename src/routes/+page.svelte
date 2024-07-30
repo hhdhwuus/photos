@@ -208,6 +208,7 @@
 			(fullscreenOverlay.firstElementChild?.clientHeight ?? 0) +
 			parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top'));
 		windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
+		windowRatio = windowWidth / windowHeight;
 	});
 
 	let open = false;
@@ -256,10 +257,9 @@
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = -rect.left + 'px';
-				console.log(Math.max((windowHeight - height) / 2, topPadding) - rect.top);
 				currentElement.style.top =
 					Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
-				// top to bottom
+			// top to bottom
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
