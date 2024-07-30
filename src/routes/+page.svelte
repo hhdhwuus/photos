@@ -219,7 +219,7 @@
 	let ionSafeAreaBottom = parseInt(
 		getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-bottom')
 	);
-	let topPadding = 0;
+	let topPadding = ionSafeAreaBottom;
 	let windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 	let windowWidth = window.innerWidth;
 	let windowRatio = windowWidth / windowHeight;
@@ -256,9 +256,9 @@
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
 				currentElement.style.left = -rect.left + 'px';
-				console.log(Math.max((windowHeight + topPadding - height) / 2, topPadding) - rect.top);
+				console.log(Math.max((windowHeight - height) / 2, topPadding) - rect.top);
 				currentElement.style.top =
-					Math.max((windowHeight - height) / 2, topPadding) - rect.top + 'px';
+					Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
 				// top to bottom
 			} else {
 				let height = windowHeight;
