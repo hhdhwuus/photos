@@ -1,4 +1,5 @@
-<script lang="ts">
+<script>
+	import '../app.css';
 	import { setupIonicBase } from 'ionic-svelte';
 
 	/* Theme variables */
@@ -12,5 +13,5 @@
 </script>
 
 <ion-app>
-	<slot />
+	<slot></slot>
 </ion-app>

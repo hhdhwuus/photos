@@ -5,6 +5,8 @@
 	import { writable, type Writable } from 'svelte/store';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { photosStore, type Photo } from '$lib/photos';
+	import * as Dialog from "$lib/components/ui/dialog";
+	import { Button } from "$lib/components/ui/button";
 
 	let content: HTMLIonContentElement;
 	let touching = false;
@@ -343,7 +345,7 @@
 		photosStore.add(photo);
 	}
 
-	function deleteCurrentPhoto() {
+	function deleteCurrentPhotoConfirmed() {
 		if (!currentPhoto) {
 			return;
 		}
@@ -403,9 +405,36 @@
 			})}
 		</h4>
 		<div class="buttons">
-			<button on:click={deleteCurrentPhoto}>
-				<Trash2 strokeWidth="1.5" size="20" />
-			</button>
+			<Dialog.Root>
+				<Dialog.Trigger>
+					<button>
+						<Trash2 strokeWidth="1.5" size="20" />
+					</button>
+				</Dialog.Trigger>
+				<Dialog.Content>
+				  <Dialog.Header>
+					<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+					<Dialog.Description>
+					  This action cannot be undone. This will permanently delete your account
+					  and remove your data from our servers.
+					</Dialog.Description>
+				  </Dialog.Header>
+				  
+				  <!-- Buttons Section -->
+				  <div class="dialog-footer">
+					<Dialog.Close>
+						<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>
+						Delete
+						</Button>
+					</Dialog.Close>
+					<Dialog.Close><Button variant="outline">
+						Cancel
+					  </Button>
+					</Dialog.Close>
+				  </div>
+				  
+				</Dialog.Content>
+			  </Dialog.Root>
 			<button on:click={closePhoto}>
 				<X strokeWidth="1.5" />
 			</button>
