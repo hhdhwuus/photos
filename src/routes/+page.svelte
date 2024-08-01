@@ -190,11 +190,11 @@
 						closePhoto();
 					}
 					if (swipeDirection === "right") {
-						switchPhoto("right");
+						switchPhoto("left");
 						
 					}
 					if (swipeDirection === "left") {
-						switchPhoto("left");
+						switchPhoto("right");
 					}
 					
 				}
