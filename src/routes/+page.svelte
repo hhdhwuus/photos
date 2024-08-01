@@ -7,8 +7,13 @@
 	import { photosStore, type Photo } from '$lib/photos';
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Button } from "$lib/components/ui/button";
+	import { Carousel } from 'flowbite-svelte';
+	import { AccordionItem, Accordion } from 'flowbite-svelte';
+
+	type Direction = 'right' | 'left' | 'top' | 'down';
 
 	let content: HTMLIonContentElement;
+	let swipeDirection: Direction;
 	let touching = false;
 	let zooming = false;
 	let rect = { top: 0, left: 0, width: 0, height: 0 };
@@ -112,6 +117,19 @@
 				touchDistance.set(Math.sqrt(dx * dx + dy * dy));
 				touchTransform = [dx, dy];
 				touchTransformSpring.set(touchTransform);
+				if (Math.abs(touchTransform[0]) > Math.abs(touchTransform[1])) {
+					if (touchTransform[0] < 0) {
+						swipeDirection = "left";
+					} else {
+						swipeDirection = "right";
+					}
+				} else {
+					if (touchTransform[0] < 0) {
+						swipeDirection = "top";
+					} else {
+						swipeDirection = "down";
+					}
+				}
 			}
 		});
 
@@ -167,44 +185,28 @@
 				touchTransformSpring.set(touchTransform, { hard: false });
 				return;
 			} else {
+				if ($touchDistance > 50) {
+					if (swipeDirection === "down") {
+						closePhoto();
+					}
+					if (swipeDirection === "right") {
+						switchPhoto("right");
+						
+					}
+					if (swipeDirection === "left") {
+						switchPhoto("left");
+					}
+					
+				}
 				touchTransform = [0, 0];
 				scaleTransform = 1;
 
 				touchTransformSpring.set(touchTransform);
 				scaleTransformSpring.set(scaleTransform);
-				if ($touchDistance > 50) {
-					closePhoto();
-				}
+
 				touchDistance.set(0);
 			}
 		});
-
-		// window.addEventListener('mousedown', (event) => {
-		// 	if (!open) {
-		// 		return;
-		// 	}
-		// 	touching = true;
-		// 	initialTouchPosition[0] = event.clientX;
-		// 	initialTouchPosition[1] = event.clientY;
-		// });
-
-		// window.addEventListener('mousemove', (event) => {
-		// 	handleMove(event.clientX, event.clientY);
-		// });
-
-		// window.addEventListener('mouseup', (event) => {
-		// 	if (!open) {
-		// 		return;
-		// 	}
-		// 	touching = false;
-		// 	touchTransformSpring.set([0, 0]);
-		// 	if ($touchDistance > 50) {
-		// 		closePhoto();
-		// 	} else {
-		// 		fullscreenOverlayOpacity.set(1);
-		// 	}
-		// 	touchDistance.set(0);
-		// });
 
 		topPadding =
 			(fullscreenOverlay.firstElementChild?.clientHeight ?? 0) +
@@ -227,16 +229,24 @@
 	let windowWidth = window.innerWidth;
 	let windowRatio = windowWidth / windowHeight;
 	let imgRatio = 1;
+	//$:console.log(currentPhoto)
 
-	function openPhoto(photo: Photo, event: MouseEvent) {
+	function openPhoto(photo: Photo, event: MouseEvent, hallo= "ja") {
 		if (opened) {
 			return;
 		}
 		if (open) {
 			return;
-		}
+		} 
+		console.log(event.target)
 		open = true;
-		currentElement = event.target as HTMLDivElement;
+		if (hallo ==="ja") {
+			currentElement = event.target as HTMLDivElement;
+		} else {
+			currentElement = hallo
+		}
+		
+		console.log(currentElement)
 		currentPhoto = photo;
 		if (currentElement.classList.contains('photo-container') === false) {
 			return;
@@ -258,6 +268,7 @@
 				let height = windowWidth / imgRatio;
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
+				console.log(currentElement)
 				currentElement.style.left = -rect.left + 'px';
 				currentElement.style.top =
 					Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
@@ -275,30 +286,70 @@
 		};
 	}
 
-	function closePhoto() {
-		if (opened === false) {
+	async function switchPhoto(swipeDirection: Direction) {
+		let photos = $photosStore;
+		let currentIndex = photos.findIndex(photo => photo.id === currentPhoto.id);
+		// Warten auf das vollständige Schließen des aktuellen Fotos
+		await closePhoto();
+
+		let nextIndex;
+
+		if (currentIndex === -1) {
 			return;
 		}
-		console.trace();
-		open = false;
-		zooming = false;
-		fullscreenOverlayOpacity.set(0);
-		touchTransform = [0, 0];
-		touchTransformSpring.set(touchTransform);
-		scaleTransform = 1;
-		scaleTransformSpring.set(scaleTransform);
-		lastTouchPosition = [0, 0];
-		lastZoomScale = 1;
-		if (!currentElement) {
-			return;
+
+		
+		if (swipeDirection === "right") {
+			nextIndex = (currentIndex + 1) % photos.length;
 		}
-		currentElement.style.width = '';
-		currentElement.style.height = '';
-		currentElement.style.left = '';
-		currentElement.style.top = '';
-		currentElement.removeEventListener('transitionend', transitionEndOpen);
-		currentElement.addEventListener('transitionend', transitionEndClose, { once: true });
+		if (swipeDirection === "left") {
+			nextIndex = (currentIndex - 1 + photos.length) % photos.length;
+		}
+
+		const nextPhoto = photos[nextIndex];
+		currentPhoto=nextPhoto
+
+		const element = document.querySelector(`.photo-container[style*="${nextPhoto.url}"]`)
+
+		console.log(element)
+
+
+		if (nextPhoto) {
+			openPhoto(nextPhoto, event as MouseEvent, element);
+		}
 	}
+	
+	function closePhoto(): Promise<void> {
+		return new Promise<void>((resolve) => {
+			if (opened === false) {
+				resolve();
+				return;
+			}
+			open = false;
+			zooming = false;
+			fullscreenOverlayOpacity.set(0);
+			touchTransform = [0, 0];
+			touchTransformSpring.set(touchTransform);
+			scaleTransform = 1;
+			scaleTransformSpring.set(scaleTransform);
+			lastTouchPosition = [0, 0];
+			lastZoomScale = 1;
+			if (!currentElement) {
+				resolve();
+				return;
+			}
+			currentElement.style.width = '';
+			currentElement.style.height = '';
+			currentElement.style.left = '';
+			currentElement.style.top = '';
+			currentElement.removeEventListener('transitionend', transitionEndOpen);
+			currentElement.addEventListener('transitionend', () => {
+				transitionEndClose();
+				resolve();
+			}, { once: true });
+		});
+	}
+
 
 	function transitionEndOpen() {
 		opened = true;
