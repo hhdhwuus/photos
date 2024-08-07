@@ -5,14 +5,35 @@
 	import { writable, type Writable } from 'svelte/store';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { photosStore, type Photo } from '$lib/photos';
-	import * as Dialog from "$lib/components/ui/dialog";
-	import { Button } from "$lib/components/ui/button";
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
 	import { Carousel } from 'flowbite-svelte';
-	import { AccordionItem, Accordion } from 'flowbite-svelte';
+	import '@ionic/core/css/ionic.bundle.css';
+	import { CircleCheck } from 'lucide-svelte';
+	import { Circle } from 'lucide-svelte';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
+	export const images = [
+		{
+			alt: 'Cosmic timetraveler',
+			src: 'https://picsum.photos/300/200',
+			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
+		},
+		{
+			alt: 'Cosmic timetraveler',
+			src: 'https://picsum.photos/300/400',
+			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
+		},
+		{
+			alt: 'Cosmic timetraveler',
+			src: 'https://picsum.photos/300/300',
+			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
+		}
+	];
+
 	let content: HTMLIonContentElement;
+	let selectedPhotos = writable<string[]>([]);
 	let swipeDirection: Direction;
 	let touching = false;
 	let zooming = false;
@@ -49,6 +70,10 @@
 	}
 	$: if (fullscreenOverlay && !zooming) {
 		fullscreenOverlay.style.opacity = $fullscreenOverlayOpacity - $touchDistance / 500 + '';
+	}
+
+	$: if (selectedPhotos) {
+		console.log(selectedPhotos);
 	}
 
 	onMount(async () => {
@@ -119,15 +144,15 @@
 				touchTransformSpring.set(touchTransform);
 				if (Math.abs(touchTransform[0]) > Math.abs(touchTransform[1])) {
 					if (touchTransform[0] < 0) {
-						swipeDirection = "left";
+						swipeDirection = 'left';
 					} else {
-						swipeDirection = "right";
+						swipeDirection = 'right';
 					}
 				} else {
 					if (touchTransform[0] < 0) {
-						swipeDirection = "top";
+						swipeDirection = 'top';
 					} else {
-						swipeDirection = "down";
+						swipeDirection = 'down';
 					}
 				}
 			}
@@ -153,7 +178,7 @@
 				// if ($scaleTransformSpring > 3) {
 				// 	scaleTransform = 3;
 				// }
-				
+
 				if (currentRect.height > windowHeight) {
 					if (currentRect.top > topPadding) {
 						touchTransform[1] = $touchTransformSpring[1] + topPadding - currentRect.top;
@@ -186,17 +211,15 @@
 				return;
 			} else {
 				if ($touchDistance > 50) {
-					if (swipeDirection === "down") {
+					if (swipeDirection === 'down') {
 						closePhoto();
 					}
-					if (swipeDirection === "right") {
-						switchPhoto("right");
-						
+					if (swipeDirection === 'right') {
+						switchPhoto('right');
 					}
-					if (swipeDirection === "left") {
-						switchPhoto("left");
+					if (swipeDirection === 'left') {
+						switchPhoto('left');
 					}
-					
 				}
 				touchTransform = [0, 0];
 				scaleTransform = 1;
@@ -231,22 +254,50 @@
 	let imgRatio = 1;
 	//$:console.log(currentPhoto)
 
-	function openPhoto(photo: Photo, event: MouseEvent, hallo= "ja") {
+	let isSelectionMode = writable(false);
+
+	function toggleSelectionMode() {
+		isSelectionMode.update((mode) => !mode);
+		selectedPhotos.set([]);
+	}
+
+	function selectPhoto(photoId: string) {
+		selectedPhotos.update((currentPhotos) => {
+			if (currentPhotos.includes(photoId)) {
+				// Entferne das Foto, wenn es schon ausgewählt ist
+				return currentPhotos.filter((id) => id !== photoId);
+			} else {
+				// Füge das Foto hinzu, wenn es noch nicht ausgewählt ist
+				return [...currentPhotos, photoId];
+			}
+		});
+	}
+
+	function handleDeleteSelectedPhoto() {
+		$selectedPhotos.forEach((element) => {
+			photosStore.remove(element);
+		});
+
+		selectedPhotos.set([]);
+		toggleSelectionMode();
+	}
+
+	function openPhoto(photo: Photo, event: MouseEvent, hallo = 'ja') {
 		if (opened) {
 			return;
 		}
 		if (open) {
 			return;
-		} 
-		console.log(event.target)
+		}
+		console.log(event.target);
 		open = true;
-		if (hallo ==="ja") {
+		if (hallo === 'ja') {
 			currentElement = event.target as HTMLDivElement;
 		} else {
-			currentElement = hallo
+			currentElement = hallo;
 		}
-		
-		console.log(currentElement)
+
+		console.log(currentElement);
 		currentPhoto = photo;
 		if (currentElement.classList.contains('photo-container') === false) {
 			return;
@@ -268,11 +319,11 @@
 				let height = windowWidth / imgRatio;
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
-				console.log(currentElement)
+				console.log(currentElement);
 				currentElement.style.left = -rect.left + 'px';
 				currentElement.style.top =
 					Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
-			// top to bottom
+				// top to bottom
 			} else {
 				let height = windowHeight;
 				let width = height * imgRatio;
@@ -288,7 +339,7 @@
 
 	async function switchPhoto(swipeDirection: Direction) {
 		let photos = $photosStore;
-		let currentIndex = photos.findIndex(photo => photo.id === currentPhoto.id);
+		let currentIndex = photos.findIndex((photo) => photo.id === currentPhoto.id);
 		// Warten auf das vollständige Schließen des aktuellen Fotos
 		await closePhoto();
 
@@ -298,27 +349,25 @@
 			return;
 		}
 
-		
-		if (swipeDirection === "right") {
+		if (swipeDirection === 'right') {
 			nextIndex = (currentIndex + 1) % photos.length;
 		}
-		if (swipeDirection === "left") {
+		if (swipeDirection === 'left') {
 			nextIndex = (currentIndex - 1 + photos.length) % photos.length;
 		}
 
 		const nextPhoto = photos[nextIndex];
-		currentPhoto=nextPhoto
+		currentPhoto = nextPhoto;
 
-		const element = document.querySelector(`.photo-container[style*="${nextPhoto.url}"]`)
+		const element = document.querySelector(`.photo-container[style*="${nextPhoto.url}"]`);
 
-		console.log(element)
-
+		console.log(element);
 
 		if (nextPhoto) {
 			openPhoto(nextPhoto, event as MouseEvent, element);
 		}
 	}
-	
+
 	function closePhoto(): Promise<void> {
 		return new Promise<void>((resolve) => {
 			if (opened === false) {
@@ -343,13 +392,16 @@
 			currentElement.style.left = '';
 			currentElement.style.top = '';
 			currentElement.removeEventListener('transitionend', transitionEndOpen);
-			currentElement.addEventListener('transitionend', () => {
-				transitionEndClose();
-				resolve();
-			}, { once: true });
+			currentElement.addEventListener(
+				'transitionend',
+				() => {
+					transitionEndClose();
+					resolve();
+				},
+				{ once: true }
+			);
 		});
 	}
-
 
 	function transitionEndOpen() {
 		opened = true;
@@ -413,6 +465,9 @@
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
+		<button class="selection-button" on:click={toggleSelectionMode}>
+			{$isSelectionMode ? 'Cancel' : 'Select'}
+		</button>
 	</ion-toolbar>
 </ion-header>
 
@@ -426,7 +481,10 @@
 			class=""
 			photo={photo}
 			on:click={(event) => openPhoto(photo, event)}
-			></Image> -->
+			></Image> 
+		
+		//{((open == opened) && (open || opened) && swipeDirection !== 'down') ? 'photo-container opacity-0' : 'photo-container'}
+		-->
 				{#if false}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
@@ -435,15 +493,45 @@
 						aria-label="Open Photo"
 						style="background-image: url({photo.url})"
 						role="button"
-						on:click={(event) => openPhoto(photo, event)}
+						on:click={$isSelectionMode ? selectPhoto(photo.id) : (event) => openPhoto(photo, event)}
 					></div>
+					{#if $isSelectionMode}
+						{#if $selectedPhotos.includes(photo.id)}
+							<CircleCheck class="relative z-[60]" />
+						{:else}
+							<Circle class="relative z-[60]" />
+						{/if}
+					{/if}
 				{/if}
 			</div>
 		{/each}
 	</div>
-	<button class="camera-button" on:click={addPhoto}>
-		<CameraIcon />
-	</button>
+	{#if $isSelectionMode}
+		<Dialog.Root>
+			<Dialog.Trigger>
+				<button class="camera-button">
+					<Trash2 />
+				</button>
+			</Dialog.Trigger>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+				</Dialog.Header>
+
+				<!-- Buttons Section -->
+				<div class="dialog-footer">
+					<Dialog.Close>
+						<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
+					</Dialog.Close>
+					<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
+				</div>
+			</Dialog.Content>
+		</Dialog.Root>
+	{:else}
+		<button class="camera-button" on:click={addPhoto}>
+			<CameraIcon />
+		</button>
+	{/if}
 </ion-content>
 
 <div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
@@ -463,34 +551,31 @@
 					</button>
 				</Dialog.Trigger>
 				<Dialog.Content>
-				  <Dialog.Header>
-					<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-					<Dialog.Description>
-					  This action cannot be undone. This will permanently delete your account
-					  and remove your data from our servers.
-					</Dialog.Description>
-				  </Dialog.Header>
-				  
-				  <!-- Buttons Section -->
-				  <div class="dialog-footer">
-					<Dialog.Close>
-						<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>
-						Delete
-						</Button>
-					</Dialog.Close>
-					<Dialog.Close><Button variant="outline">
-						Cancel
-					  </Button>
-					</Dialog.Close>
-				  </div>
-				  
+					<Dialog.Header>
+						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+					</Dialog.Header>
+
+					<!-- Buttons Section -->
+					<div class="dialog-footer">
+						<Dialog.Close>
+							<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
+						</Dialog.Close>
+						<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
+					</div>
 				</Dialog.Content>
-			  </Dialog.Root>
+			</Dialog.Root>
 			<button on:click={closePhoto}>
 				<X strokeWidth="1.5" />
 			</button>
 		</div>
 	</div>
+	<Carousel
+		{images}
+		imgClass="h-full w-fit"
+		let:Indicators
+		let:Controls
+		class="min-h-[320px] items-center"
+	></Carousel>
 </div>
 
 <style>
@@ -581,6 +666,16 @@
 		z-index: 70;
 	}
 
+	.selection-button {
+		position: fixed;
+		bottom: calc(36px + var(--ion-safe-area-bottom));
+		right: 16px;
+		width: 64px;
+		height: 64px;
+		border-radius: 50%;
+		z-index: 10;
+	}
+
 	.camera-button {
 		position: fixed;
 		bottom: calc(16px + var(--ion-safe-area-bottom));
@@ -589,5 +684,41 @@
 		height: 64px;
 		border-radius: 50%;
 		z-index: 10;
+	}
+
+	.selection-button {
+		right: 16px;
+		width: 64px;
+		height: 20px;
+		border-radius: 10%;
+		z-index: 10;
+		background-color: rgb(124, 124, 124);
+		color: white;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.delete-button {
+		position: fixed;
+		bottom: calc(100px + var(--ion-safe-area-bottom));
+		right: 16px;
+		width: 64px;
+		height: 64px;
+		border-radius: 50%;
+		z-index: 10;
+		background-color: red;
+		color: white;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.ion-radio {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		z-index: 50;
+		background-color: white;
+		border-radius: 50%;
 	}
 </style>
