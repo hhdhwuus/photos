@@ -390,9 +390,9 @@
 			</div>
 		{/each}
 	</div>
-	<button class="camera-button" on:click={addPhoto}>
+	<Button class="fixed right-5 bottom-5 aspect-square h-auto rounded-full" on:click={addPhoto}>
 		<CameraIcon />
-	</button>
+	</Button>
 </ion-content>
 
 <div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
@@ -414,10 +414,6 @@
 				<Dialog.Content>
 				  <Dialog.Header>
 					<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-					<Dialog.Description>
-					  This action cannot be undone. This will permanently delete your account
-					  and remove your data from our servers.
-					</Dialog.Description>
 				  </Dialog.Header>
 				  
 				  <!-- Buttons Section -->
