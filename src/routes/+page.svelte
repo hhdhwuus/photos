@@ -5,6 +5,7 @@
 
 	import { photosStore, type Photo } from '$lib/photos';
 
+	import { Capacitor } from '@capacitor/core';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
@@ -83,6 +84,8 @@
 	}
 
 	onMount(async () => {
+		const platform = Capacitor.getPlatform();
+		console.log(platform)
 		window.addEventListener('touchstart', (event) => {
 			if (!open) {
 				return;
@@ -452,6 +455,15 @@
 			url: imageUrl
 		};
 		photosStore.add(photo);
+
+		// Speichern des Bildes im Dateisystem
+		const base64Data = image.dataUrl.split(',')[1];
+		await Filesystem.writeFile({
+		path: 'myImage.jpg',
+		data: base64Data,
+		directory: Directory.Data,
+		encoding: Encoding.UTF8
+		});
 	}
 
 	function deleteCurrentPhotoConfirmed() {
@@ -575,13 +587,13 @@
 			</button>
 		</div>
 	</div>
-	<Carousel
+	<!--<Carousel
 		{images}
 		imgClass="h-full w-fit"
 		let:Indicators
 		let:Controls
 		class="min-h-[320px] items-center"
-	></Carousel>
+	></Carousel> -->
 </div>
 
 <style>
