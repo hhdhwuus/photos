@@ -1,14 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
-	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { writable, type Writable } from 'svelte/store';
-	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+
 	import { photosStore, type Photo } from '$lib/photos';
+
+	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+
+	import '@ionic/core/css/ionic.bundle.css';
+
+	import { Carousel } from 'flowbite-svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
-	import { Carousel } from 'flowbite-svelte';
-	import '@ionic/core/css/ionic.bundle.css';
+
+	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
 	import { CircleCheck } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
 
@@ -465,9 +471,9 @@
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
-		<button class="selection-button" on:click={toggleSelectionMode}>
+		<ion-buttons slot="end" on:click={toggleSelectionMode}>
 			{$isSelectionMode ? 'Cancel' : 'Select'}
-		</button>
+		</ion-buttons>
 	</ion-toolbar>
 </ion-header>
 
@@ -666,16 +672,6 @@
 		z-index: 70;
 	}
 
-	.selection-button {
-		position: fixed;
-		bottom: calc(36px + var(--ion-safe-area-bottom));
-		right: 16px;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		z-index: 10;
-	}
-
 	.camera-button {
 		position: fixed;
 		bottom: calc(16px + var(--ion-safe-area-bottom));
@@ -684,41 +680,5 @@
 		height: 64px;
 		border-radius: 50%;
 		z-index: 10;
-	}
-
-	.selection-button {
-		right: 16px;
-		width: 64px;
-		height: 20px;
-		border-radius: 10%;
-		z-index: 10;
-		background-color: rgb(124, 124, 124);
-		color: white;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.delete-button {
-		position: fixed;
-		bottom: calc(100px + var(--ion-safe-area-bottom));
-		right: 16px;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		z-index: 10;
-		background-color: red;
-		color: white;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.ion-radio {
-		position: absolute;
-		top: 8px;
-		right: 8px;
-		z-index: 50;
-		background-color: white;
-		border-radius: 50%;
 	}
 </style>
