@@ -15,7 +15,7 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
+	import { Camera as CameraIcon, Share, Trash2, X } from 'lucide-svelte';
 	import { CircleCheck } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
 
@@ -520,7 +520,7 @@
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
-		<ion-buttons slot="end" on:click={toggleSelectionMode}>
+		<ion-buttons class="pr-5" slot="end" on:click={toggleSelectionMode}>
 			{$isSelectionMode ? 'Cancel' : 'Select'}
 		</ion-buttons>
 	</ion-toolbar>
@@ -561,33 +561,47 @@
 			</div>
 		{/each}
 	</div>
-	{#if $isSelectionMode}
-		<Dialog.Root>
-			<Dialog.Trigger>
-				<button class="camera-button">
-					<Trash2 />
-				</button>
-			</Dialog.Trigger>
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-				</Dialog.Header>
-
-				<!-- Buttons Section -->
-				<div class="dialog-footer">
-					<Dialog.Close>
-						<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-					</Dialog.Close>
-					<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-				</div>
-			</Dialog.Content>
-		</Dialog.Root>
-	{:else}
+	{#if !$isSelectionMode}
 		<button class="camera-button" on:click={addPhoto}>
 			<CameraIcon />
 		</button>
 	{/if}
 </ion-content>
+{#if $isSelectionMode}
+	<ion-footer translucent>
+		<ion-toolbar>
+			<div class="flex justify-end space-x-5 pr-10">
+				<div>
+					<Dialog.Root>
+						<Dialog.Trigger>
+							<button>
+								<Share class="text-black-700"/>
+							</button>
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Header>
+								<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+							</Dialog.Header>
+			
+							<!-- Buttons Section -->
+							<div class="dialog-footer">
+								<Dialog.Close>
+									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
+								</Dialog.Close>
+								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
+							</div>
+						</Dialog.Content>
+					</Dialog.Root>
+				</div>
+				<div>
+					<button>
+						<Trash2 class="text-red-500"/>
+					</button>
+				</div>
+			</div>
+		</ion-toolbar>
+	</ion-footer>
+{/if}
 
 <div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
 	<div class="container">

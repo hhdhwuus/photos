@@ -1,6 +1,7 @@
 <script>
 	import '../app.css';
 	import { setupIonicBase } from 'ionic-svelte';
+	import { videocam, pin } from 'ionicons/icons';
 
 	/* Theme variables */
 	import '../theme/variables.css';
