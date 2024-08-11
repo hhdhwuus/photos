@@ -4,6 +4,7 @@ type Photo = {
 	id: string;
 	date: Date;
 	url: string;
+    localurl: string;
 };
 
 let test;

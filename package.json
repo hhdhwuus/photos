@@ -41,6 +41,7 @@
 		"@capacitor/core": "^6.1.1",
 		"@capacitor/device": "^6.0.0",
 		"@capacitor/filesystem": "^6.0.1",
+		"@capacitor/share": "^6.0.2",
 		"@ionic/core": "^8.2.5",
 		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",

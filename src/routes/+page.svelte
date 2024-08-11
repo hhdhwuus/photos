@@ -8,6 +8,7 @@
 	import { Capacitor } from '@capacitor/core';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+	import { Share } from '@capacitor/share';
 
 	import '@ionic/core/css/ionic.bundle.css';
 
@@ -15,14 +16,17 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Camera as CameraIcon, Share, Trash2, X } from 'lucide-svelte';
+	import { Camera as CameraIcon, Share2, Trash2, X } from 'lucide-svelte';
 	import { CircleCheck } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
+	let testpath;
+
 	let content: HTMLIonContentElement;
 	let selectedPhotos = writable<string[]>([]);
+	let sharedPhotos: string[] = [];
 	let swipeDirection: Direction;
 	let touching = false;
 	let zooming = false;
@@ -71,7 +75,7 @@
 
 		async function initPhotostore() {
 			const directoryContents = await Filesystem.readdir({
-				directory: Directory.Data,
+				directory: Directory.External,
 				path: ''
 			});
 
@@ -82,7 +86,8 @@
 					let photo: Photo = {
 						id: crypto.randomUUID(),
 						date: new Date(),
-						url: Capacitor.convertFileSrc(file.uri)
+						url: Capacitor.convertFileSrc(file.uri),
+						localurl: file.uri
 					};
 					photosStore.add(photo);
 				}
@@ -300,7 +305,7 @@
 				if (selectedFilename) {
 					await Filesystem.deleteFile({
 						path: selectedFilename,
-						directory: Directory.Data
+						directory: Directory.External
 					});
 				}
 
@@ -308,6 +313,34 @@
 			}
 		});
 
+		selectedPhotos.set([]);
+		toggleSelectionMode();
+	}
+
+	async function shareSelectedPhoto() {
+		// Alle asynchronen Operationen sammeln
+		const photoPromises = $selectedPhotos.map(async (element) => {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+			console.log("Photo:",JSON.stringify(selectedPhoto))
+			const selectedFileUrl = selectedPhoto?.localurl;
+			
+			console.log("FileUrl:", selectedFileUrl);
+			if (selectedFileUrl) {
+				sharedPhotos.push(selectedFileUrl);
+			}
+		});
+
+		// Warten bis alle asynchronen Operationen abgeschlossen sind
+		await Promise.all(photoPromises);
+
+		console.log("List", sharedPhotos);
+
+		await Share.share({
+			files: sharedPhotos,
+		});
+
+		// Listen und Status zurücksetzen
+		sharedPhotos = [];
 		selectedPhotos.set([]);
 		toggleSelectionMode();
 	}
@@ -470,7 +503,7 @@
 
 		const fileName = Date.now() + '.jpeg';
 		const savedFile = await Filesystem.writeFile({
-			directory: Directory.Data,
+			directory: Directory.External,
 			path: fileName,
 			data: image.base64String
 		});
@@ -478,7 +511,8 @@
 		let photo: Photo = {
 			id: crypto.randomUUID(),
 			date: new Date(),
-			url: Capacitor.convertFileSrc(savedFile.uri)
+			url: Capacitor.convertFileSrc(savedFile.uri),
+			localurl: savedFile.uri
 		};
 		photosStore.add(photo);
 	}
@@ -506,15 +540,16 @@
 			if (selectedFilename) {
 				await Filesystem.deleteFile({
 					path: selectedFilename,
-					directory: Directory.Data
+					directory: Directory.External
 				});
 			}
 
 			photosStore.remove(currentPhoto.id);
 		}
-
-		
 	}
+
+
+
 </script>
 
 <ion-header translucent>
@@ -567,31 +602,14 @@
 		</button>
 	{/if}
 </ion-content>
-{#if $isSelectionMode}
-	<ion-footer translucent>
+{#if $isSelectionMode || opened}
+	<ion-footer translucent class="z-[10000]">
 		<ion-toolbar>
 			<div class="flex justify-end space-x-5 pr-10">
 				<div>
-					<Dialog.Root>
-						<Dialog.Trigger>
-							<button>
-								<Share class="text-black-700"/>
-							</button>
-						</Dialog.Trigger>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-							</Dialog.Header>
-			
-							<!-- Buttons Section -->
-							<div class="dialog-footer">
-								<Dialog.Close>
-									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-								</Dialog.Close>
-								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-							</div>
-						</Dialog.Content>
-					</Dialog.Root>
+					<button  on:click={shareSelectedPhoto}>
+						<Share2 class="text-black-700"/>
+					</button>
 				</div>
 				<div>
 					<button>
