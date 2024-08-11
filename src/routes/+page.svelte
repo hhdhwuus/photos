@@ -21,24 +21,6 @@
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
-	export const images = [
-		{
-			alt: 'Cosmic timetraveler',
-			src: 'https://picsum.photos/300/200',
-			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
-		},
-		{
-			alt: 'Cosmic timetraveler',
-			src: 'https://picsum.photos/300/400',
-			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
-		},
-		{
-			alt: 'Cosmic timetraveler',
-			src: 'https://picsum.photos/300/300',
-			title: 'cosmic-timetraveler-pYyOZ8q7AII-unsplash.com'
-		}
-	];
-
 	let content: HTMLIonContentElement;
 	let selectedPhotos = writable<string[]>([]);
 	let swipeDirection: Direction;
@@ -85,7 +67,30 @@
 
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
-		console.log(platform)
+		console.log(platform);
+
+		async function initPhotostore() {
+			const directoryContents = await Filesystem.readdir({
+				directory: Directory.Data,
+				path: ''
+			});
+
+			console.log('Directory Contents:', JSON.stringify(directoryContents));
+
+			directoryContents.files.forEach((file) => {
+				if (file.uri.includes('.jpeg')) {
+					let photo: Photo = {
+						id: crypto.randomUUID(),
+						date: new Date(),
+						url: Capacitor.convertFileSrc(file.uri)
+					};
+					photosStore.add(photo);
+				}
+			});
+		}
+
+		initPhotostore();
+
 		window.addEventListener('touchstart', (event) => {
 			if (!open) {
 				return;
@@ -282,9 +287,25 @@
 		});
 	}
 
-	function handleDeleteSelectedPhoto() {
-		$selectedPhotos.forEach((element) => {
-			photosStore.remove(element);
+	async function handleDeleteSelectedPhoto() {
+		$selectedPhotos.forEach(async (element) => {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+			const selectedFileUrl = selectedPhoto?.url;
+
+			if (!selectedFileUrl) {
+				return;
+			} else {
+				const selectedFilename = selectedFileUrl.split('/').pop();
+
+				if (selectedFilename) {
+					await Filesystem.deleteFile({
+						path: selectedFilename,
+						directory: Directory.Data
+					});
+				}
+
+				photosStore.remove(element);
+			}
 		});
 
 		selectedPhotos.set([]);
@@ -437,63 +458,32 @@
 	}
 
 	async function addPhoto() {
-		const image = await Camera.getPhoto({
-				quality: 100,
-				allowEditing: false,
-				resultType: CameraResultType.Base64,
-				source: CameraSource.Camera
-			});
+		const tester99 = await Filesystem.checkPermissions();
+		console.log(tester99.publicStorage); // warum???
 
-		console.log(image.base64String)
-		const tester = image.base64String
+		const image = await Camera.getPhoto({
+			quality: 100,
+			allowEditing: false,
+			resultType: CameraResultType.Base64,
+			source: CameraSource.Camera
+		});
 
 		const fileName = Date.now() + '.jpeg';
 		const savedFile = await Filesystem.writeFile({
 			directory: Directory.Data,
 			path: fileName,
-			data: image.base64String,	
+			data: image.base64String
 		});
 
-		console.log(savedFile.uri)
-
-		const directoryContents = await Filesystem.readdir({
-			directory: Directory.Data, // oder Directory.Data, je nach App-Setup
-			path: ""
-		});
-
-		console.log("Directory Contents:", JSON.stringify(directoryContents));
-
-
-
-		/**try {
-			const image = await Camera.getPhoto({
-				quality: 100,
-				allowEditing: false,
-				resultType: CameraResultType.Uri,
-				source: CameraSource.Camera
-			});
-			console.log("Image Path:", image.path);
-
-			// Extrahiere den Ordnerpfad aus dem Bildpfad
-			const imagePath = image.path;
-			const folderPath = imagePath.substring(0, imagePath.lastIndexOf('/'));
-
-			console.log("Folder Path:", folderPath);
-
-			// Listet alle Dateien in diesem Ordner auf
-			const directoryContents = await Filesystem.readdir({
-			directory: Directory.External, // oder Directory.Data, je nach App-Setup
-			path: folderPath
-			});
-
-			console.log("Directory Contents:", JSON.stringify(directoryContents));
-		} catch (error) {
-			console.error("Error:", error);
-		}
-		**/
+		let photo: Photo = {
+			id: crypto.randomUUID(),
+			date: new Date(),
+			url: Capacitor.convertFileSrc(savedFile.uri)
+		};
+		photosStore.add(photo);
 	}
 
-	function deleteCurrentPhotoConfirmed() {
+	async function deleteCurrentPhotoConfirmed() {
 		if (!currentPhoto) {
 			return;
 		}
@@ -503,7 +493,27 @@
 		setTimeout(() => {
 			transitionEndClose();
 		}, 300);
-		photosStore.remove(currentPhoto.id);
+
+
+		let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto.id);
+		const selectedFileUrl = selectedPhoto?.url;
+
+		if (!selectedFileUrl) {
+			return;
+		} else {
+			const selectedFilename = selectedFileUrl.split('/').pop();
+
+			if (selectedFilename) {
+				await Filesystem.deleteFile({
+					path: selectedFilename,
+					directory: Directory.Data
+				});
+			}
+
+			photosStore.remove(currentPhoto.id);
+		}
+
+		
 	}
 </script>
 
