@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 type Photo = {
 	id: string;
@@ -6,12 +7,15 @@ type Photo = {
 	url: string;
 };
 
+let test;
+
 function createPhotosStore() {
+
     const initialPhotos = [
         {
             id: "7af08569-6918-4893-bdea-9ca2b93fd963",
             date: new Date('2021-08-01T12:00:00Z'),
-            url: 'https://picsum.photos/300/200'
+            url: 'file:///data/user/0/com.hybridphotos.app/files/1723400374785.jpeg'
         },
         {
             id: "5f7396cf-0081-485f-a60d-ad81d1c3f3bb",

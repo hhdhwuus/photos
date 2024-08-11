@@ -438,32 +438,59 @@
 
 	async function addPhoto() {
 		const image = await Camera.getPhoto({
-			quality: 100,
-			allowEditing: true,
-			resultType: CameraResultType.DataUrl,
-			source: CameraSource.Camera
+				quality: 100,
+				allowEditing: false,
+				resultType: CameraResultType.Base64,
+				source: CameraSource.Camera
+			});
+
+		console.log(image.base64String)
+		const tester = image.base64String
+
+		const fileName = Date.now() + '.jpeg';
+		const savedFile = await Filesystem.writeFile({
+			directory: Directory.Data,
+			path: fileName,
+			data: image.base64String,	
 		});
-		console.log(image.exif);
-		let imageUrl = image.dataUrl;
-		if (!imageUrl) {
-			return;
+
+		console.log(savedFile.uri)
+
+		const directoryContents = await Filesystem.readdir({
+			directory: Directory.Data, // oder Directory.Data, je nach App-Setup
+			path: ""
+		});
+
+		console.log("Directory Contents:", JSON.stringify(directoryContents));
+
+
+
+		/**try {
+			const image = await Camera.getPhoto({
+				quality: 100,
+				allowEditing: false,
+				resultType: CameraResultType.Uri,
+				source: CameraSource.Camera
+			});
+			console.log("Image Path:", image.path);
+
+			// Extrahiere den Ordnerpfad aus dem Bildpfad
+			const imagePath = image.path;
+			const folderPath = imagePath.substring(0, imagePath.lastIndexOf('/'));
+
+			console.log("Folder Path:", folderPath);
+
+			// Listet alle Dateien in diesem Ordner auf
+			const directoryContents = await Filesystem.readdir({
+			directory: Directory.External, // oder Directory.Data, je nach App-Setup
+			path: folderPath
+			});
+
+			console.log("Directory Contents:", JSON.stringify(directoryContents));
+		} catch (error) {
+			console.error("Error:", error);
 		}
-
-		let photo: Photo = {
-			id: crypto.randomUUID(),
-			date: new Date(),
-			url: imageUrl
-		};
-		photosStore.add(photo);
-
-		// Speichern des Bildes im Dateisystem
-		const base64Data = image.dataUrl.split(',')[1];
-		await Filesystem.writeFile({
-		path: 'myImage.jpg',
-		data: base64Data,
-		directory: Directory.Data,
-		encoding: Encoding.UTF8
-		});
+		**/
 	}
 
 	function deleteCurrentPhotoConfirmed() {
