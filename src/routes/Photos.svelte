@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
-	import { writable, type Writable } from 'svelte/store';
+	import { derived, writable, type Writable } from 'svelte/store';
 
 	import { photosStore, type Photo } from '$lib/photos';
 	import { changeTab } from '$lib/tabStore';
@@ -34,6 +34,21 @@
 	import { Label } from '$lib/components/ui/label';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
+	let photos = derived(photosStore, ($photosStore) => {
+		return $photosStore.map((photo) => {
+			return {
+				...photo,
+				loaded: (() => {
+					const img = new Image();
+					img.src = photo.url;
+					img.onload = () => true;
+					img.onerror = () => true;
+					console.log('loaded');
+					return false;
+				})()
+			};
+		});
+	});
 
 	let albumName: String;
 	let content: HTMLIonContentElement;
@@ -377,7 +392,10 @@
 		open = true;
 		if (event) {
 			currentElement = event.target as HTMLDivElement;
-		} 
+		}
+		if (element) {
+			currentElement = element as HTMLDivElement;
+		}
 		if (!currentElement) {
 			return;
 		}
@@ -580,9 +598,9 @@
 
 <ion-content fullscreen bind:this={content}>
 	<div class="photo-grid">
-		{#each $photosStore as photo}
+		{#each $photos as photo}
 			<div class="element">
-				{#if false}
+				{#if photo.loaded === false}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
 					<div
