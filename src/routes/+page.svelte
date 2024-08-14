@@ -8,6 +8,8 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Button } from "$lib/components/ui/button";
 
+	type Direction = "left" | "right" | "up" | "down";
+
 	let content: HTMLIonContentElement;
 	let touching = false;
 	let zooming = false;
@@ -15,6 +17,7 @@
 	let initialZoomDistance = 0;
 	let lastZoomScale = 1;
 	let zoomOrigin = [50, 50];
+	let swipeDirection: Direction | null = null;
 	let touchDistance = spring(0, {
 		stiffness: 0.2,
 		damping: 1
@@ -35,6 +38,8 @@
 		stiffness: 0.2,
 		damping: 1
 	});
+	let nextPhoto = null;
+	let prevPhoto = null;
 
 	$: if (currentElement) {
 		currentElement.style.transform = `translate(${$touchTransformSpring[0]}px, ${$touchTransformSpring[1]}px) scale(${$scaleTransformSpring})`;
@@ -112,6 +117,18 @@
 				touchDistance.set(Math.sqrt(dx * dx + dy * dy));
 				touchTransform = [dx, dy];
 				touchTransformSpring.set(touchTransform);
+				if (swipeDirection == 'left' || swipeDirection == 'right') {
+					
+				}
+				if (swipeDirection) {
+					return;
+				}
+				if (Math.abs(dx) > Math.abs(dy)) {
+					swipeDirection = dx > 0 ? 'right' : 'left';
+				} else {
+					swipeDirection = dy > 0 ? 'down' : 'up';
+				}
+				console.log('swipeDirection', swipeDirection);
 			}
 		});
 
@@ -120,6 +137,7 @@
 				return;
 			}
 			touching = false;
+			swipeDirection = null;
 			if (zooming) {
 				if (event.touches.length > 0) {
 					return;
@@ -244,6 +262,8 @@
 		rect = currentElement.getBoundingClientRect();
 		let img = new Image();
 		img.src = photo.url;
+		nextPhoto = $photosStore[$photosStore.indexOf(photo) + 1] ?? null;
+		prevPhoto = $photosStore[$photosStore.indexOf(photo) - 1] ?? null;
 		img.onload = () => {
 			if (!currentElement) {
 				return;
