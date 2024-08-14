@@ -32,7 +32,6 @@
 	import { Circle } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { update } from 'idb-keyval';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 	let photos = derived(photosStore, ($photosStore) => {
@@ -121,8 +120,7 @@
 					let photo: Photo = {
 						id: crypto.randomUUID(),
 						date: file.ctime ? new Date(file.ctime) : new Date(),
-						//url: Capacitor.convertFileSrc(file.uri),
-						url: file.uri,
+						url: Capacitor.convertFileSrc(file.uri),
 						localurl: file.uri
 					};
 					photosStore.add(photo);
