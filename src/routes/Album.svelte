@@ -19,7 +19,6 @@
 
 	import '@ionic/core/css/ionic.bundle.css';
 
-	import { Carousel } from 'flowbite-svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -30,7 +29,7 @@
 
 	let content: HTMLIonContentElement;
 	let selectedPhotos = writable<string[]>([]);
-  let albumName: "";
+  	let albumName: "";
 
 	function createAlbum() {
    
@@ -68,35 +67,8 @@
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Albums</ion-title>
-    <div class="pr-5" slot="end">
-      <Dialog.Root>
-        <Dialog.Trigger>
-          <button>
-            <Trash2 class="text-black-700" />
-          </button>
-        </Dialog.Trigger>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Enter album name</Dialog.Title>
-          </Dialog.Header>
-          <div class="grid gap-4 py-4">
-            <div class="grid grid-cols-4 items-center gap-4">
-              <Label class="text-right">Name</Label>
-              <Input id="name" class="col-span-3" bind:value={albumName}/>
-            </div>
-          </div>
-          <!-- Buttons Section -->
-          <div class="dialog-footer">
-            <Dialog.Close>
-              <Button on:click={createAlbum}>Create</Button>
-            </Dialog.Close>
-            <Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
-    </div>
-	</ion-toolbar></ion-header
->
+	</ion-toolbar>
+</ion-header>
 
 <ion-content fullscreen bind:this={content}>
 	<div class="photo-grid">

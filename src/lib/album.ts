@@ -67,3 +67,16 @@ export function removeImageFromAlbum(albumId, imageId) {
         return updatedAlbums;
     });
 }
+
+export function updateAlbumTitle(albumId, newTitle) {
+    albumStore.update(albums => {
+        const updatedAlbums = albums.map(album => {
+            if (album.id === albumId) {
+                return { ...album, title: newTitle };
+            }
+            return album;
+        });
+        idbSet('albums', updatedAlbums);
+        return updatedAlbums;
+    });
+}

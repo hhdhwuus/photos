@@ -559,7 +559,7 @@
 
 		console.log(albumImages)
 		addAlbum(newAlbum);
-		changeTab('Album')
+		changeTab('album')
 
 		if ($isSelectionMode) {
 			selectedPhotos.set([]);

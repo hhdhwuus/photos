@@ -36,7 +36,6 @@
 				if (tabName) {
 					tabsElement.select(tabName);
 					changeTab('');
-					photosStoreAlbum.clear();
 				}				
 			}
 		});

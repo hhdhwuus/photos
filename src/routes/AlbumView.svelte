@@ -5,15 +5,14 @@
 
 	import { photosStore, type Photo } from '$lib/photosalbum';
 	import { changeTab } from '$lib/tabStore';
-	import { requestedAlbumID } from '$lib/album'
+	import { requestedAlbumID } from '$lib/album';
 
 	import {
 		albumStore,
-		loadAlbums,
-		addAlbum,
 		removeAlbum,
 		addImageToAlbum,
-		removeImageFromAlbum
+		removeImageFromAlbum,
+		updateAlbumTitle
 	} from '$lib/album';
 
 	import { Capacitor } from '@capacitor/core';
@@ -22,8 +21,8 @@
 
 	import '@ionic/core/css/ionic.bundle.css';
 
-	import { Carousel } from 'flowbite-svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 
 	import { Camera as CameraIcon, Images, Share2, Trash2, X } from 'lucide-svelte';
@@ -35,10 +34,13 @@
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
-	let albumName: String;
+	let newAlbumName: String;
 	let requestedAlbum;
 	let requestedImages;
 	let requestedTitle;
+	let requestedID: String;
+	let openEdit: boolean;
+	let openDelete: boolean;
 	let content: HTMLIonContentElement;
 	let selectedPhotos = writable<string[]>([]);
 	let sharedPhotos: string[] = [];
@@ -84,35 +86,34 @@
 		console.log(selectedPhotos);
 	}
 
+	$: if (requestedAlbum) {
+		photosStore.clear();
+	}
+
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
 
 		requestedAlbumID.subscribe((albumId) => {
-			console.log(albumId)
-			console.log($albumStore)
-			requestedAlbum = $albumStore.find(album => album.id === albumId);
-			console.log(JSON.stringify(requestedAlbum))
-			requestedTitle = requestedAlbum.title
-			requestedImages = requestedAlbum.images
+			requestedAlbum = $albumStore.find((album) => album.id === albumId);
+			requestedID = albumId;
+			requestedTitle = requestedAlbum.title;
+			requestedImages = requestedAlbum.images;
 			initPhotostore();
-
-
 		});
 
 		async function initPhotostore() {
-
-			console.log(requestedImages)
+			//console.log(requestedImages)
 			const directoryContents = await Filesystem.readdir({
 				directory: Directory.External,
 				path: ''
 			});
 
-			requestedImages.forEach(element => {
+			requestedImages.forEach((element) => {
 				directoryContents.files.forEach((file) => {
-					console.log("element",element)
-					console.log("file",Capacitor.convertFileSrc(file.uri))
+					//console.log("element",element)
+					//console.log("file",Capacitor.convertFileSrc(file.uri))
 					if (Capacitor.convertFileSrc(file.uri) === element) {
-						console.log(Capacitor.convertFileSrc(file.uri))
+						//console.log(Capacitor.convertFileSrc(file.uri))
 						let photo: Photo = {
 							id: crypto.randomUUID(),
 							date: new Date(file.ctime),
@@ -124,8 +125,6 @@
 				});
 			});
 		}
-
-		
 
 		window.addEventListener('touchstart', (event) => {
 			if (!open) {
@@ -561,57 +560,82 @@
 		}
 	}
 
-	async function createAlbum () {
-		let albumImages: String[] = [];
-		$selectedPhotos.forEach(async (element) => {
-			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
-			if (selectedPhoto) {
-				albumImages.push(selectedPhoto?.url);
-			}
-		});
-		const newAlbum = {
-			id: Date.now().toString(), // Einfache ID basierend auf dem aktuellen Timestamp
-			title: albumName,
-			images: albumImages
-		};
-		albumName = "";
+	function removeAlbumbyID() {
+		removeAlbum(requestedID);
+		openDelete = false;
+		changeTab('album');
+	}
 
-		console.log(albumImages)
-		addAlbum(newAlbum);
-		changeTab('contact')
-
-		if ($isSelectionMode) {
-			selectedPhotos.set([]);
-			toggleSelectionMode();
+	function renameAlbum() {
+		if (newAlbumName) {
+			updateAlbumTitle(requestedID, newAlbumName);
+			requestedTitle = newAlbumName;
+			openEdit = false;
+			newAlbumName = '';
 		}
-
-		console.log($albumStore)
 	}
 </script>
 
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>{requestedTitle}</ion-title>
-		<ion-buttons class="pr-5" slot="end" on:click={toggleSelectionMode}>
-			{$isSelectionMode ? 'Cancel' : 'Select'}
-		</ion-buttons>
+		<div class="pr-5" slot="end">
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						<DropdownMenu.Label>Album Options</DropdownMenu.Label>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item on:click={() => (openEdit = true)}>Rename</DropdownMenu.Item>
+						<DropdownMenu.Item on:click={() => (openDelete = true)}>Delete</DropdownMenu.Item>
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+			<div class="pr-5" slot="end"></div>
+		</div>
 	</ion-toolbar>
 </ion-header>
+
+<Dialog.Root bind:open={openEdit}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Rename album</Dialog.Title>
+		</Dialog.Header>
+		<div class="grid gap-4 py-4">
+			<div class="grid grid-cols-4 items-center gap-4">
+				<Label class="text-right">Name</Label>
+				<Input
+					id="name"
+					class="col-span-3"
+					placeholder={requestedTitle}
+					bind:value={newAlbumName}
+				/>
+			</div>
+		</div>
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Button on:click={renameAlbum}>Rename</Button>
+			<Button variant="outline"  on:click={() => { openEdit = false; newAlbumName = ''; }}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={openDelete}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+		</Dialog.Header>
+		<div class="dialog-footer">
+			<Button variant="destructive" on:click={removeAlbumbyID}>Delete</Button>
+			<Button variant="outline" on:click={() => (openDelete = false)}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
 
 <ion-content fullscreen bind:this={content}>
 	<div class="photo-grid">
 		{#each $photosStore as photo}
 			<div class="element">
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-interactive-supports-focus -->
-				<!-- <Image
-			class=""
-			photo={photo}
-			on:click={(event) => openPhoto(photo, event)}
-			></Image> 
-		
-		//{((open == opened) && (open || opened) && swipeDirection !== 'down') ? 'photo-container opacity-0' : 'photo-container'}
-		-->
 				{#if false}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
@@ -634,38 +658,11 @@
 		{/each}
 	</div>
 </ion-content>
+
 {#if $isSelectionMode || opened}
 	<ion-footer translucent class="z-[10000]">
 		<ion-toolbar>
 			<div class="flex justify-end space-x-5 pr-10">
-				<div>
-					<Dialog.Root>
-						<Dialog.Trigger>
-						  <button>
-							<FolderPlus class="text-black-700" />
-						  </button>
-						</Dialog.Trigger>
-						<Dialog.Content>
-						  <Dialog.Header>
-							<Dialog.Title>Enter album name</Dialog.Title>
-						  </Dialog.Header>
-						  <div class="grid gap-4 py-4">
-							<div class="grid grid-cols-4 items-center gap-4">
-							  <Label class="text-right">Name</Label>
-							  <Input id="name" class="col-span-3" bind:value={albumName}/>
-							</div>
-						  </div>
-						  <!-- Buttons Section -->
-						  <div class="dialog-footer">
-							<Dialog.Close>
-							  <Button on:click={createAlbum}>Create</Button>
-							</Dialog.Close>
-							<Dialog.Close>
-								<Button variant="outline">Cancel</Button></Dialog.Close>
-						  </div>
-						</Dialog.Content>
-					  </Dialog.Root>
-				</div>
 				<div>
 					<button on:click={shareSelectedPhoto}>
 						<Share2 class="text-black-700" />
@@ -686,9 +683,7 @@
 							<!-- Buttons Section -->
 							<div class="dialog-footer">
 								<Dialog.Close>
-									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}
-										>Delete</Button
-									>
+									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
 								</Dialog.Close>
 								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
 							</div>
@@ -735,13 +730,6 @@
 			</button>
 		</div>
 	</div>
-	<!--<Carousel
-		{images}
-		imgClass="h-full w-fit"
-		let:Indicators
-		let:Controls
-		class="min-h-[320px] items-center"
-	></Carousel> -->
 </div>
 
 <style>
