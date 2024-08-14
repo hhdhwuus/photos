@@ -1,14 +1,13 @@
 import { writable } from 'svelte/store';
 
 type Photo = {
-	id: string;
-	date: Date;
-	url: string;
+    id: string;
+    date: Date;
+    url: string;
     localurl: string;
 };
 
 function createPhotosStore() {
-
     const { subscribe, update } = writable<Photo[]>([]);
 
     const sortPhotosByDate = (photos: Photo[]) => {
@@ -19,7 +18,8 @@ function createPhotosStore() {
         subscribe,
         add: (photo: Photo) => update((photos) => sortPhotosByDate([...photos, photo])),
         remove: (photoId: string) =>
-            update((photos) => sortPhotosByDate(photos.filter((p) => p.id !== photoId)))
+            update((photos) => sortPhotosByDate(photos.filter((p) => p.id !== photoId))),
+        clear: () => update(() => [])  // Hier wird der Store auf ein leeres Array zurückgesetzt
     };
 }
 
