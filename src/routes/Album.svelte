@@ -28,19 +28,6 @@
 
 
 	let content: HTMLIonContentElement;
-	let selectedPhotos = writable<string[]>([]);
-  	let albumName: "";
-
-	function createAlbum() {
-   
-    
-		const newAlbum = {
-			id: Date.now().toString(), // Einfache ID basierend auf dem aktuellen Timestamp
-			title: 'Neues Album',
-			images: []
-		};
-		addAlbum(newAlbum);
-	}
 
 	// Beispiel: Hinzufügen eines neuen Bildes zu einem Album
 	function addImage(albumId) {

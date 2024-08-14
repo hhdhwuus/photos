@@ -582,16 +582,6 @@
 	<div class="photo-grid">
 		{#each $photosStore as photo}
 			<div class="element">
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-interactive-supports-focus -->
-				<!-- <Image
-			class=""
-			photo={photo}
-			on:click={(event) => openPhoto(photo, event)}
-			></Image> 
-		
-		//{((open == opened) && (open || opened) && swipeDirection !== 'down') ? 'photo-container opacity-0' : 'photo-container'}
-		-->
 				{#if false}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
 				{:else}
@@ -812,13 +802,4 @@
 		z-index: 70;
 	}
 
-	.camera-button {
-		position: fixed;
-		bottom: calc(16px + var(--ion-safe-area-bottom));
-		right: 16px;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		z-index: 10;
-	}
 </style>
