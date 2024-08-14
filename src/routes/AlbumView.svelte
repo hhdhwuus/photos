@@ -7,11 +7,7 @@
 	import { changeTab } from '$lib/tabStore';
 	import { requestedAlbumID } from '$lib/album';
 
-	import {
-		albumStore,
-		removeAlbum,
-		updateAlbumTitle
-	} from '$lib/album';
+	import { albumStore, removeAlbum, updateAlbumTitle } from '$lib/album';
 
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -23,7 +19,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Camera as CameraIcon, FolderPen , Share2, Trash2, X } from 'lucide-svelte';
+	import { Camera as CameraIcon, FolderPen, Share2, Trash2, X } from 'lucide-svelte';
 	import { FolderPlus } from 'lucide-svelte';
 	import { CircleCheck } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
@@ -32,11 +28,11 @@
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
-	let newAlbumName: String;
-	let requestedAlbum;
-	let requestedImages;
-	let requestedTitle;
-	let requestedID: String;
+	let newAlbumName: string;
+	let requestedAlbum: string;
+	let requestedImages: string;
+	let requestedTitle: string;
+	let requestedID: string;
 	let openEdit: boolean;
 	let openDelete: boolean;
 	let content: HTMLIonContentElement;
@@ -383,7 +379,7 @@
 		}
 	}
 
-	function openPhoto(photo: Photo, event: MouseEvent, hallo = 'ja') {
+	function openPhoto(photo: Photo, event: MouseEvent, predefinedElement = null) {
 		if (opened) {
 			return;
 		}
@@ -392,10 +388,10 @@
 		}
 		console.log(event.target);
 		open = true;
-		if (hallo === 'ja') {
+		if (!predefinedElement) {
 			currentElement = event.target as HTMLDivElement;
 		} else {
-			currentElement = hallo;
+			currentElement = predefinedElement;
 		}
 
 		console.log(currentElement);
@@ -437,6 +433,7 @@
 			currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
 		};
 	}
+
 
 	async function switchPhoto(swipeDirection: Direction) {
 		let photos = $photosStore;
@@ -619,7 +616,13 @@
 		<!-- Buttons Section -->
 		<div class="dialog-footer">
 			<Button on:click={renameAlbum}>Rename</Button>
-			<Button variant="outline"  on:click={() => { openEdit = false; newAlbumName = ''; }}>Cancel</Button>
+			<Button
+				variant="outline"
+				on:click={() => {
+					openEdit = false;
+					newAlbumName = '';
+				}}>Cancel</Button
+			>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
