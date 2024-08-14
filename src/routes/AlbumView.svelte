@@ -10,8 +10,6 @@
 	import {
 		albumStore,
 		removeAlbum,
-		addImageToAlbum,
-		removeImageFromAlbum,
 		updateAlbumTitle
 	} from '$lib/album';
 
@@ -25,7 +23,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Camera as CameraIcon, Images, Share2, Trash2, X } from 'lucide-svelte';
+	import { Camera as CameraIcon, FolderPen , Share2, Trash2, X } from 'lucide-svelte';
 	import { FolderPlus } from 'lucide-svelte';
 	import { CircleCheck } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
@@ -586,8 +584,14 @@
 					<DropdownMenu.Group>
 						<DropdownMenu.Label>Album Options</DropdownMenu.Label>
 						<DropdownMenu.Separator />
-						<DropdownMenu.Item on:click={() => (openEdit = true)}>Rename</DropdownMenu.Item>
-						<DropdownMenu.Item on:click={() => (openDelete = true)}>Delete</DropdownMenu.Item>
+						<DropdownMenu.Item on:click={() => (openEdit = true)}>
+							<FolderPen class="mr-2 h-4 w-4" />
+							<span>Rename</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item on:click={() => (openDelete = true)}>
+							<Trash2 class="mr-2 h-4 w-4" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
