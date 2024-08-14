@@ -17,7 +17,7 @@
 
 	import { Capacitor } from '@capacitor/core';
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+	import { Filesystem, Directory, Encoding, type FileInfo } from '@capacitor/filesystem';
 	import { Share } from '@capacitor/share';
 
 	import '@ionic/core/css/ionic.bundle.css';
@@ -93,11 +93,11 @@
 
 			console.log('Directory Contents:', JSON.stringify(directoryContents));
 
-			directoryContents.files.forEach((file) => {
+			directoryContents.files.forEach((file: FileInfo) => {
 				if (file.uri.includes('.jpeg')) {
 					let photo: Photo = {
 						id: crypto.randomUUID(),
-						date: new Date(file.ctime),
+						date: file.ctime ? new Date(file.ctime) : new Date(),
 						url: Capacitor.convertFileSrc(file.uri),
 						localurl: file.uri
 					};
@@ -269,7 +269,7 @@
 		windowRatio = windowWidth / windowHeight;
 	});
 
-	let open = false;
+	export let open = false;
 	let opened = false;
 	let currentElement: HTMLDivElement | null;
 	let currentPhoto: Photo | null;
@@ -285,7 +285,7 @@
 	let imgRatio = 1;
 	//$:console.log(currentPhoto)
 
-	let isSelectionMode = writable(false);
+	export let isSelectionMode = writable(false);
 
 	function toggleSelectionMode() {
 		isSelectionMode.update((mode) => !mode);
@@ -367,21 +367,20 @@
 		}
 	}
 
-	function openPhoto(photo: Photo, event: MouseEvent, hallo = 'ja') {
+	function openPhoto(photo: Photo, event?: MouseEvent | null, element?: Element | null) {
 		if (opened) {
 			return;
 		}
 		if (open) {
 			return;
 		}
-		console.log(event.target);
 		open = true;
-		if (hallo === 'ja') {
+		if (event) {
 			currentElement = event.target as HTMLDivElement;
-		} else {
-			currentElement = hallo;
+		} 
+		if (!currentElement) {
+			return;
 		}
-
 		console.log(currentElement);
 		currentPhoto = photo;
 		if (currentElement.classList.contains('photo-container') === false) {
@@ -424,11 +423,11 @@
 
 	async function switchPhoto(swipeDirection: Direction) {
 		let photos = $photosStore;
-		let currentIndex = photos.findIndex((photo) => photo.id === currentPhoto.id);
+		let currentIndex = photos.findIndex((photo) => photo.id === currentPhoto?.id);
 		// Warten auf das vollständige Schließen des aktuellen Fotos
 		await closePhoto();
 
-		let nextIndex;
+		let nextIndex = 0;
 
 		if (currentIndex === -1) {
 			return;
@@ -449,7 +448,7 @@
 		console.log(element);
 
 		if (nextPhoto) {
-			openPhoto(nextPhoto, event as MouseEvent, element);
+			openPhoto(nextPhoto, undefined, element);
 		}
 	}
 
@@ -523,7 +522,7 @@
 			transitionEndClose();
 		}, 300);
 
-		let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto.id);
+		let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
 		const selectedFileUrl = selectedPhoto?.url;
 
 		if (!selectedFileUrl) {
@@ -601,7 +600,7 @@
 						aria-label="Open Photo"
 						style="background-image: url({photo.url})"
 						role="button"
-						on:click={$isSelectionMode ? selectPhoto(photo.id) : (event) => openPhoto(photo, event)}
+						on:click={$isSelectionMode ? () => selectPhoto(photo.id) : (event) => openPhoto(photo, event)}
 					></div>
 					{#if $isSelectionMode}
 						{#if $selectedPhotos.includes(photo.id)}
