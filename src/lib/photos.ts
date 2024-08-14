@@ -7,8 +7,6 @@ type Photo = {
     localurl: string;
 };
 
-let test;
-
 function createPhotosStore() {
 
     const { subscribe, update } = writable<Photo[]>([]);

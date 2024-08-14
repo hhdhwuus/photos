@@ -32,6 +32,7 @@
 	import { Circle } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { update } from 'idb-keyval';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 	let photos = derived(photosStore, ($photosStore) => {
@@ -39,12 +40,19 @@
 			return {
 				...photo,
 				loaded: (() => {
-					const img = new Image();
+					let img = new Image();
 					img.src = photo.url;
-					img.onload = () => true;
-					img.onerror = () => true;
-					console.log('loaded');
-					return false;
+					console.log('loading', photo.url);
+					return new Promise((resolve) => {
+						img.onload = () => {
+							console.log('loaded', photo.url);
+							resolve(true);
+						};
+						img.onerror = () => {
+							console.log('error', photo.url);
+							resolve(true);
+						};
+					});
 				})()
 			};
 		});
@@ -98,10 +106,10 @@
 
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
-		console.log(new Date((new Date(1723420462406)).toISOString()));
+		console.log(new Date(new Date(1723420462406).toISOString()));
 
 		async function initPhotostore() {
-			const directoryContents = await Filesystem.readdir({
+			let directoryContents = await Filesystem.readdir({
 				directory: Directory.External,
 				path: ''
 			});
@@ -113,12 +121,15 @@
 					let photo: Photo = {
 						id: crypto.randomUUID(),
 						date: file.ctime ? new Date(file.ctime) : new Date(),
-						url: Capacitor.convertFileSrc(file.uri),
+						//url: Capacitor.convertFileSrc(file.uri),
+						url: file.uri,
 						localurl: file.uri
 					};
 					photosStore.add(photo);
 				}
 			});
+
+			console.log('Photos:', $photosStore);
 		}
 
 		initPhotostore();
@@ -559,7 +570,7 @@
 		}
 	}
 
-	async function createAlbum () {
+	async function createAlbum() {
 		let albumImages: String[] = [];
 		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
@@ -572,18 +583,18 @@
 			title: albumName,
 			images: albumImages
 		};
-		albumName = "";
+		albumName = '';
 
-		console.log(albumImages)
+		console.log(albumImages);
 		addAlbum(newAlbum);
-		changeTab('album')
+		changeTab('album');
 
 		if ($isSelectionMode) {
 			selectedPhotos.set([]);
 			toggleSelectionMode();
 		}
 
-		console.log($albumStore)
+		console.log($albumStore);
 	}
 </script>
 
@@ -600,15 +611,17 @@
 	<div class="photo-grid">
 		{#each $photos as photo}
 			<div class="element">
-				{#if photo.loaded === false}
+				{#await photo.loaded}
 					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
-				{:else}
+				{:then}
 					<div
 						class="photo-container"
 						aria-label="Open Photo"
 						style="background-image: url({photo.url})"
 						role="button"
-						on:click={$isSelectionMode ? () => selectPhoto(photo.id) : (event) => openPhoto(photo, event)}
+						on:click={$isSelectionMode
+							? () => selectPhoto(photo.id)
+							: (event) => openPhoto(photo, event)}
 					></div>
 					{#if $isSelectionMode}
 						{#if $selectedPhotos.includes(photo.id)}
@@ -617,7 +630,7 @@
 							<Circle class="relative z-[60]" />
 						{/if}
 					{/if}
-				{/if}
+				{/await}
 			</div>
 		{/each}
 	</div>
@@ -629,30 +642,31 @@
 				<div>
 					<Dialog.Root>
 						<Dialog.Trigger>
-						  <button>
-							<FolderPlus class="text-black-700" />
-						  </button>
+							<button>
+								<FolderPlus class="text-black-700" />
+							</button>
 						</Dialog.Trigger>
 						<Dialog.Content>
-						  <Dialog.Header>
-							<Dialog.Title>Enter album name</Dialog.Title>
-						  </Dialog.Header>
-						  <div class="grid gap-4 py-4">
-							<div class="grid grid-cols-4 items-center gap-4">
-							  <Label class="text-right">Name</Label>
-							  <Input id="name" class="col-span-3" bind:value={albumName}/>
+							<Dialog.Header>
+								<Dialog.Title>Enter album name</Dialog.Title>
+							</Dialog.Header>
+							<div class="grid gap-4 py-4">
+								<div class="grid grid-cols-4 items-center gap-4">
+									<Label class="text-right">Name</Label>
+									<Input id="name" class="col-span-3" bind:value={albumName} />
+								</div>
 							</div>
-						  </div>
-						  <!-- Buttons Section -->
-						  <div class="dialog-footer">
-							<Dialog.Close>
-							  <Button on:click={createAlbum}>Create</Button>
-							</Dialog.Close>
-							<Dialog.Close>
-								<Button variant="outline">Cancel</Button></Dialog.Close>
-						  </div>
+							<!-- Buttons Section -->
+							<div class="dialog-footer">
+								<Dialog.Close>
+									<Button on:click={createAlbum}>Create</Button>
+								</Dialog.Close>
+								<Dialog.Close>
+									<Button variant="outline">Cancel</Button></Dialog.Close
+								>
+							</div>
 						</Dialog.Content>
-					  </Dialog.Root>
+					</Dialog.Root>
 				</div>
 				<div>
 					<button on:click={shareSelectedPhoto}>
@@ -674,9 +688,7 @@
 							<!-- Buttons Section -->
 							<div class="dialog-footer">
 								<Dialog.Close>
-									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}
-										>Delete</Button
-									>
+									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
 								</Dialog.Close>
 								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
 							</div>
@@ -819,5 +831,4 @@
 		margin: 0;
 		z-index: 70;
 	}
-
 </style>
