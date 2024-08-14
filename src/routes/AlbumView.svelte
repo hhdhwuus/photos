@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
 	import { writable, type Writable } from 'svelte/store';
 
@@ -8,6 +8,7 @@
 	import { requestedAlbumID } from '$lib/album';
 
 	import { albumStore, removeAlbum, updateAlbumTitle } from '$lib/album';
+	import { activeTab } from '$lib/tabStore';
 
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -120,7 +121,9 @@
 			});
 		}
 
-		window.addEventListener('touchstart', (event) => {
+		window.addEventListener('touchstart', touchstart);
+
+		function touchstart(event: TouchEvent) {
 			if (!open) {
 				return;
 			}
@@ -145,7 +148,7 @@
 				initialTouchPosition[1] = event.touches[0].clientY;
 			}
 			console.log('touchstart');
-		});
+		}
 
 		window.addEventListener('touchmove', (event) => {
 			if (!open || !touching) {
@@ -279,6 +282,10 @@
 			parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top'));
 		windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 		windowRatio = windowWidth / windowHeight;
+	});
+
+	onDestroy(() => {
+		console.log('destroy');
 	});
 
 	let open = false;
@@ -433,7 +440,6 @@
 			currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
 		};
 	}
-
 
 	async function switchPhoto(swipeDirection: Direction) {
 		let photos = $photosStore;

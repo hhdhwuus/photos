@@ -77,10 +77,17 @@
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			<Photos bind:isSelectionMode={selectionMode} bind:open={openPhoto} />
+			{#if $activeTab === 'photos'}
+				<Photos bind:isSelectionMode={selectionMode} bind:open={openPhoto} />
+			{/if}
 		</ion-tab>
 		<ion-tab tab="album">
 			<Album />
+		</ion-tab>
+		<ion-tab tab="albumview">
+			{#if $activeTab === 'albumview'}
+				<AlbumView />
+			{/if}
 		</ion-tab>
 		{#if !openPhoto && !$selectionMode}
 			<ion-tab-bar slot="bottom">

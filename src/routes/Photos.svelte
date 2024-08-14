@@ -49,6 +49,7 @@
 						};
 						img.onerror = () => {
 							console.log('error', photo.url);
+							photosStore.remove(photo.id);
 							resolve(true);
 						};
 					});
