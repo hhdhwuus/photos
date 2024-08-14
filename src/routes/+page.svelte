@@ -22,20 +22,13 @@
 	let selectionMode: Writable<boolean>;
 	let openPhoto: boolean;
 
-	let tabsElement: HTMLIonTabsElement | null;
-
 	onMount(() => {
-		// Get the ion-tabs element
-		tabsElement = document.querySelector('ion-tabs');
-
 		console.log(tabsElement);
-
 		// Subscribe to store changes
 		activeTab.subscribe((tabName) => {
 			if (tabsElement) {
 				if (tabName) {
 					tabsElement.select(tabName);
-					changeTab('');
 				}
 			}
 		});
@@ -71,21 +64,23 @@
 		};
 		photosStore.add(photo);
 	}
+
+	function handleTabChange(event: CustomEvent) {
+		console.log(event.detail.tab);
+		activeTab.set(event.detail.tab);
+	}
+
+	let tabsElement: HTMLIonTabsElement | null;
+
 </script>
 
-<ion-tab tab="photos" component={Photos}></ion-tab>
-<ion-tab tab="album"></ion-tab>
-<ion-tab tab="albumview"></ion-tab>
 <ion-app>
-	<ion-tabs>
+	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
 			<Photos bind:isSelectionMode={selectionMode} bind:open={openPhoto} />
 		</ion-tab>
 		<ion-tab tab="album">
 			<Album />
-		</ion-tab>
-		<ion-tab tab="albumview">
-			<AlbumView />
 		</ion-tab>
 		{#if !openPhoto && !$selectionMode}
 			<ion-tab-bar slot="bottom">
