@@ -496,9 +496,9 @@
 				</div>
 				{#if $isSelectionMode}
 					{#if $selectedPhotos.includes(photo.id)}
-						<CircleCheck class="relative z-[60]" />
+						<CircleCheck class="relative z-[60] fill-white stroke-black" />
 					{:else}
-						<Circle class="relative z-[60]" />
+						<Circle class="relative z-[60] fill-white stroke-black" />
 					{/if}
 				{/if}
 			</div>
