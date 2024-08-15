@@ -167,6 +167,14 @@
 			// 	scaleTransform = 3;
 			// }
 
+			let windowHeight = window.innerHeight;
+			let windowWidth = window.innerWidth;
+			let topPadding =
+				(fullscreenControlsHeight ?? 0) +
+				parseInt(
+					getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top')
+				);
+
 			if (currentRect.height > windowHeight) {
 				if (currentRect.top > topPadding) {
 					touchTransform[1] = $touchTransformSpring[1] + topPadding - currentRect.top;
@@ -498,7 +506,7 @@
 	</div>
 </ion-content>
 <div
-	class="fixed left-0 top-0 z-[-10] h-full w-full bg-black p-[var(--ion-safe-area-top)_0_var(--ion-safe-area-bottom)_0]"
+	class="fixed left-0 top-0 z-[-10] h-lvh w-full bg-black p-[var(--ion-safe-area-top)_0_0_0]"
 	bind:this={fullscreenOverlay}
 >
 	<div

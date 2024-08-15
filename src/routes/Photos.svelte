@@ -151,8 +151,6 @@
 				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
-						<DropdownMenu.Label>Album Options</DropdownMenu.Label>
-						<DropdownMenu.Separator />
 						<DropdownMenu.Item>
 							<FolderPlus class="text-black-700" />
 							<span>Add to Album</span>
@@ -173,72 +171,6 @@
 </ion-header>
 
 <PhotoGrid bind:isSelectionMode bind:selectedPhotos {photosStore}></PhotoGrid>
-
-<!-- <ion-content fullscreen bind:this={content}>
-	<div class="photo-grid">
-		{#each $photos as photo}
-			<div class="element">
-				{#await photo.loaded}
-					<ion-skeleton-text animated class="skeleton"></ion-skeleton-text>
-				{:then}
-					<div
-						class="photo-container"
-						aria-label="Open Photo"
-						style="background-image: url({photo.url})"
-						role="button"
-						on:click={$isSelectionMode
-							? () => selectPhoto(photo.id)
-							: (event) => openPhoto(photo, event)}
-					></div>
-					{#if $isSelectionMode}
-						{#if $selectedPhotos.includes(photo.id)}
-							<CircleCheck class="relative z-[60]" />
-						{:else}
-							<Circle class="relative z-[60]" />
-						{/if}
-					{/if}
-				{/await}
-			</div>
-		{/each}
-	</div>
-</ion-content> -->
-
-<!-- <div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
-	<div class="container">
-		<h4>
-			{currentPhoto?.date.toLocaleDateString(navigator.language, {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			})}
-		</h4>
-		<div class="buttons">
-			<Dialog.Root>
-				<Dialog.Trigger>
-					<button>
-						<Trash2 strokeWidth="1.5" size="20" />
-					</button>
-				</Dialog.Trigger>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-					</Dialog.Header>
-
-					
-					<div class="dialog-footer">
-						<Dialog.Close>
-							<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
-						</Dialog.Close>
-						<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-					</div>
-				</Dialog.Content>
-			</Dialog.Root>
-			<button on:click={closePhoto}>
-				<X strokeWidth="1.5" />
-			</button>
-		</div>
-	</div>
-</div> -->
 
 {#if $isSelectionMode || opened}
 	<ion-footer translucent class="z-[10000]">
