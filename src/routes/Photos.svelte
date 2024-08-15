@@ -7,10 +7,7 @@
 	import { changeTab } from '$lib/tabStore';
 	import { activeTab } from '$lib/tabStore';
 
-	import {
-		albumStore,
-		type Album,
-	} from '$lib/album';
+	import { albumStore, type Album } from '$lib/album';
 
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -31,6 +28,8 @@
 
 	let albumTitle: Album['title'];
 	let sharedPhotos: string[] = [];
+	let deleteSelectionDialog: boolean;
+	let createAlbumDialog: boolean;
 
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
@@ -70,33 +69,25 @@
 			}
 		});
 
+		deleteSelectionDialog = false;
 		selectedPhotos.set([]);
 		toggleSelectionMode();
 	}
 
 	async function shareSelectedPhoto() {
-		// Alle asynchronen Operationen sammeln
-		if (!currentElement) {
-			const photoPromises = $selectedPhotos.map(async (element) => {
-				let selectedPhoto = $photosStore.find((photo) => photo.id === element);
-				console.log('Photo:', JSON.stringify(selectedPhoto));
-				const selectedFileUrl = selectedPhoto?.localurl;
-
-				console.log('FileUrl:', selectedFileUrl);
-				if (selectedFileUrl) {
-					sharedPhotos.push(selectedFileUrl);
-				}
-			});
-
-			// Warten bis alle asynchronen Operationen abgeschlossen sind
-			await Promise.all(photoPromises);
-		} else {
-			let selectedPhoto = $photosStore.find((photo) => photo.id === currentElement?.id);
+		const photoPromises = $selectedPhotos.map(async (element) => {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+			console.log('Photo:', JSON.stringify(selectedPhoto));
 			const selectedFileUrl = selectedPhoto?.localurl;
+
+			console.log('FileUrl:', selectedFileUrl);
 			if (selectedFileUrl) {
 				sharedPhotos.push(selectedFileUrl);
 			}
-		}
+		});
+
+		// Warten bis alle asynchronen Operationen abgeschlossen sind
+		await Promise.all(photoPromises);
 
 		console.log('List', sharedPhotos);
 
@@ -135,6 +126,7 @@
 			selectedPhotos.set([]);
 			toggleSelectionMode();
 		}
+		createAlbumDialog = false;
 
 		console.log($albumStore);
 	}
@@ -143,99 +135,69 @@
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
-		<ion-buttons class="pr-5" slot="end" on:click={toggleSelectionMode}>
+		{#if $isSelectionMode}
+			<div class="pr-5" slot="secondary">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Item on:click={() => (createAlbumDialog = true)}>
+								<FolderPlus class="mr-2 h-4 w-4" />
+								<span>Add to Album</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Delete</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={shareSelectedPhoto}>
+								<Share2 class="mr-2 h-4 w-4" />
+								<span>Share</span>
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+		{/if}
+		<ion-buttons class="pr-5" slot="primary" on:click={toggleSelectionMode}>
 			{$isSelectionMode ? 'Cancel' : 'Select'}
 		</ion-buttons>
-		<div class="pr-5" slot="end">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Item>
-							<FolderPlus class="text-black-700" />
-							<span>Add to Album</span>
-						</DropdownMenu.Item>
-						<DropdownMenu.Item>
-							<Trash2 class="mr-2 h-4 w-4" />
-							<span>Delete</span>
-						</DropdownMenu.Item>
-						<DropdownMenu.Item>
-							<Share2 class="mr-2 h-4 w-4" />
-							<span>Share</span>
-						</DropdownMenu.Item>
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-		</div>
 	</ion-toolbar>
 </ion-header>
 
-<PhotoGrid bind:isSelectionMode bind:selectedPhotos {photosStore}></PhotoGrid>
-
-{#if $isSelectionMode || opened}
-	<ion-footer translucent class="z-[10000]">
-		<ion-toolbar>
-			<div class="flex justify-end space-x-5 pr-10">
-				<div>
-					<Dialog.Root>
-						<Dialog.Trigger>
-							<button>
-								<FolderPlus class="text-black-700" />
-							</button>
-						</Dialog.Trigger>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Enter album name</Dialog.Title>
-							</Dialog.Header>
-							<div class="grid gap-4 py-4">
-								<div class="grid grid-cols-4 items-center gap-4">
-									<Label class="text-right">Name</Label>
-									<Input id="name" class="col-span-3" bind:value={albumTitle} />
-								</div>
-							</div>
-							<!-- Buttons Section -->
-							<div class="dialog-footer">
-								<Dialog.Close>
-									<Button on:click={createAlbum}>Create</Button>
-								</Dialog.Close>
-								<Dialog.Close>
-									<Button variant="outline">Cancel</Button></Dialog.Close
-								>
-							</div>
-						</Dialog.Content>
-					</Dialog.Root>
-				</div>
-				<div>
-					<button on:click={shareSelectedPhoto}>
-						<Share2 class="text-black-700" />
-					</button>
-				</div>
-				<div>
-					<Dialog.Root>
-						<Dialog.Trigger>
-							<button>
-								<Trash2 class="text-red-500" />
-							</button>
-						</Dialog.Trigger>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-							</Dialog.Header>
-
-							<!-- Buttons Section -->
-							<div class="dialog-footer">
-								<Dialog.Close>
-									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-								</Dialog.Close>
-								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-							</div>
-						</Dialog.Content>
-					</Dialog.Root>
-				</div>
+<Dialog.Root bind:open={createAlbumDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Enter album name</Dialog.Title>
+		</Dialog.Header>
+		<div class="grid gap-4 py-4">
+			<div class="grid grid-cols-4 items-center gap-4">
+				<Label class="text-right">Name</Label>
+				<Input id="name" class="col-span-3" bind:value={albumTitle} />
 			</div>
-		</ion-toolbar>
-	</ion-footer>
-{/if}
+		</div>
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Button variant="destructive" on:click={createAlbum}>Delete</Button>
+			<Button variant="outline" on:click={() => (createAlbumDialog = false)}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={deleteSelectionDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+		</Dialog.Header>
+
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
+			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
+
+<PhotoGrid bind:isSelectionMode bind:selectedPhotos {photosStore}></PhotoGrid>
 
 <style>
 	* {
