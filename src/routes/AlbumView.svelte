@@ -20,6 +20,8 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
 
+	import { ArrowLeft } from 'lucide-svelte';
+
 	import { Camera as CameraIcon, FolderPen, Share2, Trash2, X } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -142,6 +144,9 @@
 
 <ion-header translucent>
 	<ion-toolbar>
+		<div class="pl-2" slot="start" on:click={() => changeTab('album')}>
+            <ArrowLeft />
+		</div>
 		<ion-title>{requestedAlbum?.title}</ion-title>
 		<div class="pr-5" slot="end">
 			<DropdownMenu.Root>
