@@ -1,54 +1,18 @@
 <script lang="ts">
-	import {
-		albumStore,
-		loadAlbums,
-		addAlbum,
-		addImageToAlbum,
-		requestAlbum
-	} from '$lib/album';
+	import { albumStore, requestAlbum } from '$lib/album';
 	import { onMount } from 'svelte';
-	import { spring } from 'svelte/motion';
-	import { writable, type Writable } from 'svelte/store';
-
-	import { photosStore, type Photo } from '$lib/photos';
 	import { changeTab } from '$lib/tabStore';
-
-	import { Capacitor } from '@capacitor/core';
-	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 	import '@ionic/core/css/ionic.bundle.css';
 
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-
-	import { Camera as CameraIcon, Trash2, X } from 'lucide-svelte';
-
-
-	let content: HTMLIonContentElement;
-
-	// Beispiel: Hinzufügen eines neuen Bildes zu einem Album
-	function addImage(albumId) {
-		const newImage = {
-			id: Date.now().toString(),
-			url: 'path/to/image.jpg',
-			description: 'Ein tolles Bild'
-		};
-		addImageToAlbum(albumId, newImage);
-	}
-
 	function viewAlbum(albumId) {
-		changeTab("albumview")
-		requestAlbum(albumId)
-		
+		changeTab('albumview');
+		requestAlbum(albumId);
 	}
 
 	onMount(() => {
-    loadAlbums()
-
-  });
+		albumStore.loadAlbums();
+	});
 </script>
 
 <ion-header translucent>
@@ -57,8 +21,8 @@
 	</ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen bind:this={content}>
-	<div class="photo-grid">
+<ion-content fullscreen>
+	<div class="grid grid-cols-2">
 		{#each $albumStore as album}
 			<div class="element">
 				{#if false}
@@ -70,7 +34,7 @@
 						</div>
 						<ion-card-header>
 							<ion-card-title>{album.title}</ion-card-title>
-							<ion-card-subtitle>{(album.images).length} Items</ion-card-subtitle>
+							<ion-card-subtitle>{album.images.length} Items</ion-card-subtitle>
 						</ion-card-header>
 					</ion-card>
 				{/if}

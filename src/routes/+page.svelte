@@ -6,7 +6,6 @@
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 	import { photosStore, type Photo } from '$lib/photos';
-	import { photosStore as photosStoreAlbum } from '$lib/photosalbum';
 	import { activeTab } from '$lib/tabStore';
 	import { changeTab } from '$lib/tabStore';
 
@@ -18,9 +17,9 @@
 	import Album from './Album.svelte';
 	import AlbumView from './AlbumView.svelte';
 	import { type Writable } from 'svelte/store';
+	import { open } from '$lib/uistore';
 
 	let selectionMode: Writable<boolean>;
-	let openPhoto: boolean;
 
 	onMount(() => {
 		console.log(tabsElement);
@@ -53,7 +52,7 @@
 		const savedFile = await Filesystem.writeFile({
 			directory: Directory.External,
 			path: fileName,
-			data: image.base64String,
+			data: image.base64String
 		});
 
 		let photo: Photo = {
@@ -71,15 +70,12 @@
 	}
 
 	let tabsElement: HTMLIonTabsElement | null;
-
 </script>
 
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			{#if $activeTab === 'photos'}
-				<Photos bind:isSelectionMode={selectionMode} bind:open={openPhoto} />
-			{/if}
+			<Photos bind:isSelectionMode={selectionMode} />
 		</ion-tab>
 		<ion-tab tab="album">
 			<Album />
@@ -89,7 +85,7 @@
 				<AlbumView />
 			{/if}
 		</ion-tab>
-		{#if !openPhoto && !$selectionMode}
+		{#if !$open && !$selectionMode}
 			<ion-tab-bar slot="bottom">
 				<ion-tab-button tab="photos">
 					<Images />
