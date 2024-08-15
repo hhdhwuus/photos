@@ -34,7 +34,7 @@
 	});
 
 	async function addPhoto() {
-		const tester99 = await Filesystem.checkPermissions();
+		const tester99 = await Filesystem.requestPermissions();
 		console.log(tester99.publicStorage); // warum???
 
 		const image = await Camera.getPhoto({

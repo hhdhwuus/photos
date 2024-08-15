@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
 	import { derived, writable, type Writable } from 'svelte/store';
 
 	import { photosStore, type Photo } from '$lib/photos';
 	import { changeTab } from '$lib/tabStore';
+	import { activeTab } from '$lib/tabStore';
 
 	import {
 		albumStore,
