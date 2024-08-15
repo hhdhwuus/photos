@@ -19,7 +19,8 @@ function createPhotosStore() {
         subscribe,
         add: (photo: Photo) => update((photos) => sortPhotosByDate([...photos, photo])),
         remove: (photoId: string) =>
-            update((photos) => sortPhotosByDate(photos.filter((p) => p.id !== photoId)))
+            update((photos) => sortPhotosByDate(photos.filter((p) => p.id !== photoId))),
+        clear: () => update(() => []) // Methode zum Leeren des Stores
     };
 }
 

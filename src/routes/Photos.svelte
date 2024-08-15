@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { spring } from 'svelte/motion';
 	import { derived, writable, type Writable } from 'svelte/store';
 
 	import { photosStore, type Photo } from '$lib/photos';
 	import { changeTab } from '$lib/tabStore';
+	import { activeTab } from '$lib/tabStore';
 
 	import {
 		albumStore,
@@ -58,6 +59,7 @@
 		});
 	});
 
+	let handleTouchStart;
 	let albumName: String;
 	let content: HTMLIonContentElement;
 	let selectedPhotos = writable<string[]>([]);
@@ -104,6 +106,13 @@
 		console.log(selectedPhotos);
 	}
 
+	$: if (activeTab) {
+		console.log("photos",$activeTab)
+			
+		window.addEventListener('touchstart', handleTouchStart);
+		
+	}
+
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
 		console.log(new Date(new Date(1723420462406).toISOString()));
@@ -133,13 +142,13 @@
 
 		initPhotostore();
 
-		window.addEventListener('touchstart', (event) => {
+		handleTouchStart = (event) => {
 			if (!open) {
 				return;
 			}
 
 			rect = currentRect;
-			// more than one finger
+			// mehr als ein Finger
 			if (event.touches.length > 1) {
 				zooming = true;
 				let dx = event.touches[0].clientX - event.touches[1].clientX;
@@ -151,14 +160,18 @@
 				zoomOrigin = [(centerx - rect.left) / rect.width, (centery - rect.top) / rect.height];
 				initialZoomDistance = Math.sqrt(dx * dx + dy * dy);
 			}
-			// one finger
+			// ein Finger
 			if (event.touches.length === 1) {
 				touching = true;
 				initialTouchPosition[0] = event.touches[0].clientX;
 				initialTouchPosition[1] = event.touches[0].clientY;
 			}
 			console.log('touchstart');
-		});
+		};
+
+		
+		
+
 
 		window.addEventListener('touchmove', (event) => {
 			if (!open || !touching) {
@@ -292,6 +305,11 @@
 			parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top'));
 		windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 		windowRatio = windowWidth / windowHeight;
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('touchstart', handleTouchStart);
+		photosStore.clear()
 	});
 
 	export let open = false;

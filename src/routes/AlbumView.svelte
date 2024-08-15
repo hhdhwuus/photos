@@ -29,6 +29,7 @@
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
+	let handleTouchStart;
 	let newAlbumName: string;
 	let requestedAlbum: string;
 	let requestedImages: string;
@@ -85,6 +86,11 @@
 		photosStore.clear();
 	}
 
+	$: if (activeTab) {
+		console.log('test', $activeTab);
+		window.addEventListener('touchstart', handleTouchStart);
+	}
+
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
 
@@ -121,15 +127,13 @@
 			});
 		}
 
-		window.addEventListener('touchstart', touchstart);
-
-		function touchstart(event: TouchEvent) {
+		handleTouchStart = (event) => {
 			if (!open) {
 				return;
 			}
 
 			rect = currentRect;
-			// more than one finger
+			// mehr als ein Finger
 			if (event.touches.length > 1) {
 				zooming = true;
 				let dx = event.touches[0].clientX - event.touches[1].clientX;
@@ -141,14 +145,18 @@
 				zoomOrigin = [(centerx - rect.left) / rect.width, (centery - rect.top) / rect.height];
 				initialZoomDistance = Math.sqrt(dx * dx + dy * dy);
 			}
-			// one finger
+			// ein Finger
 			if (event.touches.length === 1) {
 				touching = true;
 				initialTouchPosition[0] = event.touches[0].clientX;
 				initialTouchPosition[1] = event.touches[0].clientY;
 			}
 			console.log('touchstart');
-		}
+		};
+
+		// Den Event-Listener hinzufügen
+
+		// Später kannst du den Event-Listener mit removeEventListener entfernen
 
 		window.addEventListener('touchmove', (event) => {
 			if (!open || !touching) {
@@ -285,7 +293,8 @@
 	});
 
 	onDestroy(() => {
-		console.log('destroy');
+		window.removeEventListener('touchstart', handleTouchStart);
+		photosStore.clear();
 	});
 
 	let open = false;
@@ -671,42 +680,6 @@
 		{/each}
 	</div>
 </ion-content>
-
-{#if $isSelectionMode || opened}
-	<ion-footer translucent class="z-[10000]">
-		<ion-toolbar>
-			<div class="flex justify-end space-x-5 pr-10">
-				<div>
-					<button on:click={shareSelectedPhoto}>
-						<Share2 class="text-black-700" />
-					</button>
-				</div>
-				<div>
-					<Dialog.Root>
-						<Dialog.Trigger>
-							<button>
-								<Trash2 class="text-red-500" />
-							</button>
-						</Dialog.Trigger>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-							</Dialog.Header>
-
-							<!-- Buttons Section -->
-							<div class="dialog-footer">
-								<Dialog.Close>
-									<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-								</Dialog.Close>
-								<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-							</div>
-						</Dialog.Content>
-					</Dialog.Root>
-				</div>
-			</div>
-		</ion-toolbar>
-	</ion-footer>
-{/if}
 
 <div class="fullscreen-overlay" bind:this={fullscreenOverlay}>
 	<div class="container">
