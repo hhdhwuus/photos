@@ -34,8 +34,8 @@
 	});
 
 	async function addPhoto() {
-		const tester99 = await Filesystem.requestPermissions();
-		console.log(tester99.publicStorage); // warum???
+		const permissionResponse = await Filesystem.requestPermissions();
+		console.log(permissionResponse.publicStorage); // warum???
 
 		const image = await Camera.getPhoto({
 			quality: 100,
@@ -85,18 +85,19 @@
 				<AlbumView />
 			{/if}
 		</ion-tab>
-		{#if !$open && !$selectionMode}
-			<ion-tab-bar slot="bottom">
-				<ion-tab-button tab="photos">
-					<Images />
-				</ion-tab-button>
-				<ion-tab-button tab="album">
-					<BookImage />
-				</ion-tab-button>
-				<ion-tab-button on:click={addPhoto}>
-					<CameraIcon />
-				</ion-tab-button>
-			</ion-tab-bar>
-		{/if}
+		<ion-tab-bar
+			slot="bottom"
+			class="{!$open && !$selectionMode ? '' : 'translate-y-full'} transition-transform duration-300"
+		>
+			<ion-tab-button tab="photos">
+				<Images />
+			</ion-tab-button>
+			<ion-tab-button tab="album">
+				<BookImage />
+			</ion-tab-button>
+			<ion-tab-button on:click={addPhoto}>
+				<CameraIcon />
+			</ion-tab-button>
+		</ion-tab-bar>
 	</ion-tabs>
 </ion-app>
