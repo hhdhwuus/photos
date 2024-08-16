@@ -177,7 +177,7 @@
 		</div>
 		<!-- Buttons Section -->
 		<div class="dialog-footer">
-			<Button variant="destructive" on:click={createAlbum}>Delete</Button>
+			<Button variant="destructive" on:click={createAlbum}>Create</Button>
 			<Button variant="outline" on:click={() => (createAlbumDialog = false)}>Cancel</Button>
 		</div>
 	</Dialog.Content>
