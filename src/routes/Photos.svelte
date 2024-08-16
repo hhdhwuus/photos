@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
-	import { spring } from 'svelte/motion';
 	import { derived, writable, type Writable } from 'svelte/store';
 
 	import { photosStore, type Photo } from '$lib/photos';
 	import { changeTab } from '$lib/tabStore';
-	import { activeTab } from '$lib/tabStore';
 
 	import { albumStore, type Album } from '$lib/album';
 
@@ -15,7 +13,6 @@
 
 	import '@ionic/core/css/ionic.bundle.css';
 
-	import { Carousel } from 'flowbite-svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
@@ -136,7 +133,7 @@
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
 		{#if $isSelectionMode}
-			<div class="pr-5" slot="secondary">
+			<div class="pr-5 pl-5" slot="secondary">
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 					<DropdownMenu.Content>

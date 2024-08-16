@@ -23,7 +23,6 @@
 
 	onMount(() => {
 		console.log(tabsElement);
-		// Subscribe to store changes
 		activeTab.subscribe((tabName) => {
 			if (tabsElement) {
 				if (tabName) {

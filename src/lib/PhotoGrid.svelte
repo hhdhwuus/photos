@@ -5,13 +5,16 @@
 
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding, type FileInfo } from '@capacitor/filesystem';
+	import { Share } from '@capacitor/share';
+	import { PhotoEditor } from '@capawesome/capacitor-photo-editor';
 
 	import '@ionic/core/css/ionic.bundle.css';
-	import { CircleCheck, Trash2, X } from 'lucide-svelte';
+	import { CircleCheck, Trash2, ArrowLeft, Share2, SquarePen } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
 
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from './components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { Photo, PhotosStore } from './photos';
 	import { open } from '$lib/uistore';
 
@@ -24,6 +27,9 @@
 	}
 
 	let photos = writable<Image[]>([]);
+
+	let deleteSelectionDialog: boolean;
+	let platform: String;
 
 	let content: HTMLIonContentElement;
 	let swipeDirection: Direction;
@@ -236,7 +242,7 @@
 	});
 
 	onMount(async () => {
-		const platform = Capacitor.getPlatform();
+		platform = Capacitor.getPlatform();
 
 		window.addEventListener('touchend', touchend);
 		window.addEventListener('touchmove', touchmove);
@@ -380,6 +386,36 @@
 		});
 	}
 
+	async function shareCurrentPhoto() {
+		console.log(JSON.stringify(currentElement));
+		if (!currentElement) {
+			return;
+		} else {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
+			const selectedFileUrl = selectedPhoto?.localurl;
+			console.log(selectedFileUrl);
+			if (selectedFileUrl) {
+				await Share.share({
+					url: selectedFileUrl
+				});
+			}
+		}
+	}
+
+	async function editCurrentPhoto() {
+		console.log(JSON.stringify(currentElement));
+		if (!currentElement) {
+			return;
+		} else {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
+			const selectedFileUrl = selectedPhoto?.localurl;
+			console.log(selectedFileUrl);
+			if (selectedFileUrl) {
+				const editedImage = await PhotoEditor.editPhoto({ path: selectedFileUrl });
+			}
+		}
+	}
+
 	function transitionEndOpen() {
 		opened = true;
 		if (!currentElement) {
@@ -449,6 +485,7 @@
 
 		let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
 		const selectedFileUrl = selectedPhoto?.url;
+		console.log(selectedFileUrl);
 
 		if (!selectedFileUrl) {
 			return;
@@ -513,6 +550,12 @@
 		bind:clientHeight={fullscreenControlsHeight}
 		class="relative z-[70] flex w-full flex-row items-center justify-between p-4 text-white"
 	>
+		<button
+			on:click={closePhoto}
+			class="z-70 relative flex h-8 w-8 items-center justify-center rounded-full border-none  text-white"
+		>
+			<ArrowLeft />
+		</button>
 		<h4 class="z-[70] m-0">
 			{currentPhoto?.date.toLocaleDateString(navigator.language, {
 				day: 'numeric',
@@ -521,34 +564,43 @@
 			})}
 		</h4>
 		<div class="relative flex flex-row justify-between gap-4">
-			<Dialog.Root>
-				<Dialog.Trigger>
-					<button
-						class="z-70 relative flex h-8 w-8 items-center justify-center rounded-full border-none bg-white bg-opacity-25 p-1 text-white"
-					>
-						<Trash2 strokeWidth="1.5" size="20" />
-					</button>
-				</Dialog.Trigger>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
-					</Dialog.Header>
-
-					<!-- Buttons Section -->
-					<div class="dialog-footer">
-						<Dialog.Close>
-							<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
-						</Dialog.Close>
-						<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
-					</div>
-				</Dialog.Content>
-			</Dialog.Root>
-			<button
-				on:click={closePhoto}
-				class="z-70 relative flex h-8 w-8 items-center justify-center rounded-full border-none bg-white bg-opacity-25 p-1 text-white"
-			>
-				<X strokeWidth="1.5" />
-			</button>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+							<Trash2 class="mr-2 h-4 w-4" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
+						<DropdownMenu.Item on:click={shareCurrentPhoto}>
+							<Share2 class="mr-2 h-4 w-4" />
+							<span>Share</span>
+						</DropdownMenu.Item>
+						{#if platform === 'android'}
+							<DropdownMenu.Item on:click={editCurrentPhoto}>
+								<SquarePen class="mr-2 h-4 w-4" />
+								<span>Edit</span>
+							</DropdownMenu.Item>
+						{/if}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 	</div>
 </div>
+
+<Dialog.Root bind:open={deleteSelectionDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+		</Dialog.Header>
+
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Dialog.Close>
+				<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
+			</Dialog.Close>
+			<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
