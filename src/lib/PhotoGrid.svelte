@@ -17,6 +17,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { Photo, PhotosStore } from './photos';
 	import { open } from '$lib/uistore';
+	import Photos from '../routes/Photos.svelte';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
@@ -30,6 +31,7 @@
 
 	let deleteSelectionDialog: boolean;
 	let platform: String;
+	let imageResetLoad: boolean = false;
 
 	let content: HTMLIonContentElement;
 	let swipeDirection: Direction;
@@ -213,6 +215,9 @@
 			return;
 		} else {
 			if ($touchDistance > 50) {
+				if (swipeDirection === 'top') {
+					closePhoto();
+				}
 				if (swipeDirection === 'down') {
 					closePhoto();
 				}
@@ -289,6 +294,7 @@
 	}
 
 	function openPhoto(photo: Photo, event?: MouseEvent | null, element?: Element | null) {
+		console.log(currentElement);
 		if (opened) {
 			return;
 		}
@@ -306,11 +312,15 @@
 		}
 		currentPhoto = photo;
 		if (currentElement.classList.contains('photo-container') === false) {
+			console.log('tets');
 			return;
 		}
+		console.log('tets');
 		$open = true;
 		rect = currentElement.getBoundingClientRect();
+		console.log(currentElement);
 		let img = new Image();
+
 		img.src = photo.url;
 		img.onload = () => {
 			if (!currentElement) {
@@ -403,15 +413,32 @@
 	}
 
 	async function editCurrentPhoto() {
-		console.log(JSON.stringify(currentElement));
 		if (!currentElement) {
 			return;
-		} else {
-			let selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
-			const selectedFileUrl = selectedPhoto?.localurl;
-			console.log(selectedFileUrl);
-			if (selectedFileUrl) {
+		}
+
+		const selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
+		const selectedFileUrl = selectedPhoto?.localurl;
+		const selectedFileUrlElement = selectedPhoto?.url;
+
+		if (selectedFileUrl) {
+			imageResetLoad = true;
+			try {
 				const editedImage = await PhotoEditor.editPhoto({ path: selectedFileUrl });
+				console.log(editedImage);
+
+				// Trigger the image reload
+				const imgElement = document.querySelector(
+					`img[src="${selectedFileUrlElement}"]`
+				) as HTMLImageElement;
+				if (imgElement) {
+					const newSrc = `${selectedFileUrlElement}?t=${new Date().getTime()}`;
+					imgElement.src = newSrc;
+				}
+				imageResetLoad = false;
+			} catch (error) {
+				imageResetLoad = false;
+				console.error('Error editing photo:', error);
 			}
 		}
 	}
@@ -442,7 +469,7 @@
 	}
 
 	async function switchPhoto(swipeDirection: Direction) {
-		let photos = $photosStore;
+		let photos = $photos;
 		let currentIndex = photos.findIndex((photo) => photo.id === currentPhoto?.id);
 		// Warten auf das vollständige Schließen des aktuellen Fotos
 		await closePhoto();
@@ -453,19 +480,16 @@
 			return;
 		}
 
-		if (swipeDirection === 'right') {
+		if (swipeDirection === 'left') {
 			nextIndex = (currentIndex + 1) % photos.length;
 		}
-		if (swipeDirection === 'left') {
+		if (swipeDirection === 'right') {
 			nextIndex = (currentIndex - 1 + photos.length) % photos.length;
 		}
-
 		const nextPhoto = photos[nextIndex];
 		currentPhoto = nextPhoto;
 
-		const element = document.querySelector(`.photo-container[style*="${nextPhoto.url}"]`);
-
-		console.log(element);
+		const element = content.querySelector(`img[src="${nextPhoto.url}"]`)?.parentElement;
 
 		if (nextPhoto) {
 			openPhoto(nextPhoto, undefined, element);
@@ -552,7 +576,7 @@
 	>
 		<button
 			on:click={closePhoto}
-			class="z-70 relative flex h-8 w-8 items-center justify-center rounded-full border-none  text-white"
+			class="z-70 relative flex h-8 w-8 items-center justify-center rounded-full border-none text-white"
 		>
 			<ArrowLeft />
 		</button>
@@ -563,6 +587,8 @@
 				year: 'numeric'
 			})}
 		</h4>
+
+		<ion-loading is-open={imageResetLoad} message="Loading..." spinner="circles"></ion-loading>
 		<div class="relative flex flex-row justify-between gap-4">
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
