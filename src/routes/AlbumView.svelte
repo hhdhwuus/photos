@@ -22,7 +22,7 @@
 
 	import { ArrowLeft } from 'lucide-svelte';
 
-	import { Camera as CameraIcon, FolderPen, Share2, Trash2, X } from 'lucide-svelte';
+	import { Camera as CameraIcon, FolderPen, Share2, Trash2, MousePointer2  } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import PhotoGrid from '$lib/PhotoGrid.svelte';
@@ -31,14 +31,21 @@
 	let requestedAlbum: Album;
 	let openEdit: boolean;
 	let openDelete: boolean;
+	let deleteSelectionDialog: boolean;
 	let selectedPhotos = writable<string[]>([]);
 	let sharedPhotos: string[] = [];
 
 	let unsubscribe = requestedAlbumID.subscribe((albumId) => {
+		console.log("testig")
 		requestedAlbum = $albumStore.find((album) => album.id === albumId) as Album;
 	});
 
-	let photos = derived(photosStore, ($photosStore) => {
+	// let photos = derived(photosStore, ($photosStore) => {
+	// 	console.log('images', requestedAlbum);
+	// 	return $photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url));
+	// });
+
+	let photos = derived(requestedAlbum, ($requestedAlbum) => {
 		console.log('images', requestedAlbum);
 		return $photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url));
 	});
@@ -46,7 +53,6 @@
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
 
-		console.log($photos);
 	});
 
 	onDestroy(() => {
@@ -54,9 +60,8 @@
 		unsubscribe();
 	});
 
-	let open = false;
 
-	let isSelectionMode = writable(false);
+	export let isSelectionMode = writable(false);
 
 	function toggleSelectionMode() {
 		isSelectionMode.update((mode) => !mode);
@@ -64,25 +69,19 @@
 	}
 
 	async function handleDeleteSelectedPhoto() {
-		$selectedPhotos.forEach(async (element) => {
+		console.log(requestedAlbum.id)
+		console.log(selectedPhotos)
+		const photoPromises = $selectedPhotos.map(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
-			const selectedFileUrl = selectedPhoto?.url;
+			console.log('Photo:', JSON.stringify(selectedPhoto));
+			const selectedFileUrl = selectedPhoto?.localurl;
 
-			if (!selectedFileUrl) {
-				return;
-			} else {
-				const selectedFilename = selectedFileUrl.split('/').pop();
-
-				if (selectedFilename) {
-					await Filesystem.deleteFile({
-						path: selectedFilename,
-						directory: Directory.External
-					});
-				}
-
-				photosStore.remove(element);
+			if (selectedFileUrl) {
+				albumStore.removeImageFromAlbum(requestedAlbum.id, selectedFileUrl);
+				console.log($photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url)))
 			}
 		});
+	
 
 		selectedPhotos.set([]);
 		toggleSelectionMode();
@@ -144,29 +143,59 @@
 
 <ion-header translucent>
 	<ion-toolbar>
-		<div class="pl-2" slot="start" on:click={() => changeTab('album')}>
-            <ArrowLeft />
-		</div>
+		{#if !$isSelectionMode}
+			<div class="pl-2" slot="start" on:click={() => changeTab('album')}>
+				<ArrowLeft />
+			</div>
+		{/if}
 		<ion-title>{requestedAlbum?.title}</ion-title>
-		<div class="pr-5" slot="end">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Label>Album Options</DropdownMenu.Label>
-						<DropdownMenu.Separator />
-						<DropdownMenu.Item on:click={() => (openEdit = true)}>
-							<FolderPen class="mr-2 h-4 w-4" />
-							<span>Rename</span>
-						</DropdownMenu.Item>
-						<DropdownMenu.Item on:click={() => (openDelete = true)}>
-							<Trash2 class="mr-2 h-4 w-4" />
-							<span>Delete</span>
-						</DropdownMenu.Item>
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-		</div>
+		{#if !$isSelectionMode}
+			<div class="pr-5" slot="primary">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Label>Album Options</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item on:click={() => (openEdit = true)}>
+								<FolderPen class="mr-2 h-4 w-4" />
+								<span>Rename</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={() => (openDelete = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Delete</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={toggleSelectionMode}>
+								<MousePointer2  class="mr-2 h-4 w-4" />
+								<span>Select</span>
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+		{/if}
+		{#if $isSelectionMode}
+			<div class="pl-5 pr-5" slot="secondary">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Delete from Album</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={shareSelectedPhoto}>
+								<Share2 class="mr-2 h-4 w-4" />
+								<span>Share</span>
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
+			<ion-buttons class="pr-5" slot="primary" on:click={toggleSelectionMode}>
+				Cancel
+			</ion-buttons>
+		{/if}
 	</ion-toolbar>
 </ion-header>
 
@@ -208,6 +237,20 @@
 		<div class="dialog-footer">
 			<Button variant="destructive" on:click={removeAlbumByID}>Delete</Button>
 			<Button variant="outline" on:click={() => (openDelete = false)}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={deleteSelectionDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+		</Dialog.Header>
+
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
+			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
