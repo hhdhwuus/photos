@@ -3,6 +3,8 @@
 	import { spring } from 'svelte/motion';
 	import { derived, writable, type Writable } from 'svelte/store';
 
+	import { albumStore, type Album } from '$lib/album';
+
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding, type FileInfo } from '@capacitor/filesystem';
 	import { Share } from '@capacitor/share';
@@ -17,7 +19,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { Photo, PhotosStore } from './photos';
 	import { open } from '$lib/uistore';
-	import Photos from '../routes/Photos.svelte';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
@@ -523,6 +524,7 @@
 				});
 			}
 
+			albumStore.removeImageFromAllAlbums(selectedFileUrl);
 			photosStore.remove(currentPhoto.id);
 		}
 	}

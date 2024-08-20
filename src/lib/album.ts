@@ -90,6 +90,21 @@ export const albumStore = (() => {
 		});
 	}
 
+	function removeImageFromAllAlbums(imageUrl: Photo['localurl']) {
+		update((albums) => {
+			// Bild aus jedem Album entfernen
+			const updatedAlbums = albums.map((album) => {
+				return {
+					...album,
+					images: album.images.filter((image) => image !== imageUrl)
+				};
+			});
+			// Aktualisierte Alben in IndexedDB speichern
+			idbSet('albums', updatedAlbums);
+			return updatedAlbums;
+		});
+	}
+
 	return {
 		subscribe,
 		loadAlbums,
@@ -97,6 +112,7 @@ export const albumStore = (() => {
 		removeAlbum,
 		addImageToAlbum,
 		removeImageFromAlbum,
-		updateAlbumTitle
+		updateAlbumTitle,
+		removeImageFromAllAlbums
 	};
 })();

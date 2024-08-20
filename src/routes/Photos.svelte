@@ -61,7 +61,7 @@
 						directory: Directory.External
 					});
 				}
-
+				albumStore.removeImageFromAllAlbums(selectedFileUrl);
 				photosStore.remove(element);
 			}
 		});
@@ -140,15 +140,19 @@
 						<DropdownMenu.Group>
 							<DropdownMenu.Item on:click={() => (createAlbumDialog = true)}>
 								<FolderPlus class="mr-2 h-4 w-4" />
-								<span>Add to Album</span>
+								<span>Create Album</span>
 							</DropdownMenu.Item>
-							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
-								<Trash2 class="mr-2 h-4 w-4" />
-								<span>Delete</span>
+							<DropdownMenu.Item on:click={() => (createAlbumDialog = true)}>
+								<FolderPlus class="mr-2 h-4 w-4" />
+								<span>Add to Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>
 								<Share2 class="mr-2 h-4 w-4" />
 								<span>Share</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Delete</span>
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
