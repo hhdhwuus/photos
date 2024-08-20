@@ -8,7 +8,7 @@ export const requestedAlbumID = writable<string>('');
 export type Album = {
 	id: string;
 	title: string;
-	images: Photo['id'][];
+	images: Photo['localurl'][];
 };
 
 export function requestAlbum(albumId: string) {
@@ -46,7 +46,7 @@ export const albumStore = (() => {
 	}
 
 	// Function to add an image to an album
-	function addImageToAlbum(albumId: Album['id'], newImage: Photo['url']) {
+	function addImageToAlbum(albumId: Album['id'], newImage: Photo['localurl']) {
 		update((albums) => {
 			const updatedAlbums = albums.map((album) => {
 				if (album.id === albumId) {
@@ -60,7 +60,7 @@ export const albumStore = (() => {
 	}
 
 	// Function to remove an image from an album
-	function removeImageFromAlbum(albumId: Album['id'], imageUrl: Photo['url']) {
+	function removeImageFromAlbum(albumId: Album['id'], imageUrl: Photo['localurl']) {
 		update((albums) => {
 			const updatedAlbums = albums.map((album) => {
 				if (album.id === albumId) {

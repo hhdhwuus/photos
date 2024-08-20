@@ -28,16 +28,15 @@
 	import PhotoGrid from '$lib/PhotoGrid.svelte';
 
 	let newAlbumName: Album['title'];
-	let requestedAlbum: Album;
+	let requestedAlbum: Writable<Album> = writable();
 	let openEdit: boolean;
 	let openDelete: boolean;
 	let deleteSelectionDialog: boolean;
 	let selectedPhotos = writable<string[]>([]);
 	let sharedPhotos: string[] = [];
 
-	let unsubscribe = requestedAlbumID.subscribe((albumId) => {
-		console.log("testig")
-		requestedAlbum = $albumStore.find((album) => album.id === albumId) as Album;
+	let unsubscribe = albumStore.subscribe(() => {
+		requestedAlbum.set($albumStore.find((album) => album.id === $requestedAlbumID) as Album);
 	});
 
 	// let photos = derived(photosStore, ($photosStore) => {
@@ -45,9 +44,10 @@
 	// 	return $photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url));
 	// });
 
-	let photos = derived(requestedAlbum, ($requestedAlbum) => {
-		console.log('images', requestedAlbum);
-		return $photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url));
+	let photos = writable<Photo[]>([]);
+
+	let unsubscribeAlbum = requestedAlbum.subscribe((album) => {
+		photos.set($photosStore.filter((photo) => album?.images.includes(photo.url)));
 	});
 
 	onMount(async () => {
@@ -58,6 +58,7 @@
 	onDestroy(() => {
 		console.log('destroy');
 		unsubscribe();
+		unsubscribeAlbum();
 	});
 
 
@@ -69,19 +70,19 @@
 	}
 
 	async function handleDeleteSelectedPhoto() {
-		console.log(requestedAlbum.id)
+		console.log($requestedAlbum.id)
 		console.log(selectedPhotos)
-		const photoPromises = $selectedPhotos.map(async (element) => {
+		deleteSelectionDialog = false;
+		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
 			console.log('Photo:', JSON.stringify(selectedPhoto));
 			const selectedFileUrl = selectedPhoto?.localurl;
 
 			if (selectedFileUrl) {
-				albumStore.removeImageFromAlbum(requestedAlbum.id, selectedFileUrl);
-				console.log($photosStore.filter((photo) => requestedAlbum?.images.includes(photo.url)))
+				albumStore.removeImageFromAlbum($requestedAlbum.id, selectedFileUrl);
+				console.log($photosStore.filter((photo) => $requestedAlbum?.images.includes(photo.url)))
 			}
 		});
-	
 
 		selectedPhotos.set([]);
 		toggleSelectionMode();
@@ -126,15 +127,15 @@
 	}
 
 	function removeAlbumByID() {
-		albumStore.removeAlbum(requestedAlbum.id);
+		albumStore.removeAlbum($requestedAlbum.id);
 		openDelete = false;
 		changeTab('album');
 	}
 
 	function renameAlbum() {
 		if (newAlbumName) {
-			albumStore.updateAlbumTitle(requestedAlbum.id, newAlbumName);
-			requestedAlbum.title = newAlbumName;
+			albumStore.updateAlbumTitle($requestedAlbum.id, newAlbumName);
+			$requestedAlbum.title = newAlbumName;
 			openEdit = false;
 			newAlbumName = '';
 		}
@@ -148,7 +149,7 @@
 				<ArrowLeft />
 			</div>
 		{/if}
-		<ion-title>{requestedAlbum?.title}</ion-title>
+		<ion-title>{$requestedAlbum?.title}</ion-title>
 		{#if !$isSelectionMode}
 			<div class="pr-5" slot="primary">
 				<DropdownMenu.Root>
