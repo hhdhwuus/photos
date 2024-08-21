@@ -76,7 +76,7 @@
 		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
 			console.log('Photo:', JSON.stringify(selectedPhoto));
-			const selectedFileUrl = selectedPhoto?.localurl;
+			const selectedFileUrl = selectedPhoto?.url;
 
 			if (selectedFileUrl) {
 				albumStore.removeImageFromAlbum($requestedAlbum.id, selectedFileUrl);
