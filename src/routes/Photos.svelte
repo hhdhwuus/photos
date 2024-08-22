@@ -142,10 +142,6 @@
 								<FolderPlus class="mr-2 h-4 w-4" />
 								<span>Create Album</span>
 							</DropdownMenu.Item>
-							<DropdownMenu.Item on:click={() => (createAlbumDialog = true)}>
-								<FolderPlus class="mr-2 h-4 w-4" />
-								<span>Add to Album</span>
-							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>
 								<Share2 class="mr-2 h-4 w-4" />
 								<span>Share</span>

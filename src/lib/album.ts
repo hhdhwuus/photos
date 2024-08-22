@@ -1,7 +1,6 @@
 import { writable } from 'svelte/store';
 import { set as idbSet, get as idbGet } from 'idb-keyval';
 import type { Photo } from './photos';
-import type { AlbumProps } from 'lucide-svelte/icons/album';
 
 export const requestedAlbumID = writable<string>('');
 
