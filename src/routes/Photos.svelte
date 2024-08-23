@@ -35,7 +35,7 @@
 	let deleteSelectionDialog: boolean;
 	let createAlbumDialog: boolean;
 	let addToAlbumDialog: boolean;
-	let selectOption: SelectOption;
+	let selectOption: SelectOption | undefined;
 
 	let albums: Album[] = [];
 	albumStore.subscribe((value) => {
@@ -140,22 +140,24 @@
 	}
 
 	async function addPhotosToAlbum() {
-		console.log(selectOption.value);
+		if (selectOption) {
+			console.log(selectOption.value);
 
-		$selectedPhotos.forEach(async (element) => {
-			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
-			if (selectedPhoto) {
-				albumStore.addImageToAlbum(selectOption.value, selectedPhoto.localurl);
+			$selectedPhotos.forEach(async (element) => {
+				let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+				if (selectedPhoto && selectOption) {
+					albumStore.addImageToAlbum(selectOption.value, selectedPhoto.localurl);
+				}
+			});
+
+			if ($isSelectionMode) {
+				selectedPhotos.set([]);
+				toggleSelectionMode();
 			}
-		});
 
-		if ($isSelectionMode) {
-			selectedPhotos.set([]);
-			toggleSelectionMode();
+			changeTab('album');
+			addToAlbumDialog = false;
 		}
-
-		changeTab('album');
-		addToAlbumDialog = false;
 	}
 </script>
 
@@ -250,7 +252,13 @@
 		<!-- Buttons Section -->
 		<div class="dialog-footer">
 			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
+			<Button
+				variant="outline"
+				on:click={() => {
+					deleteSelectionDialog = false;
+					selectOption = undefined;
+				}}>Cancel</Button
+			>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
