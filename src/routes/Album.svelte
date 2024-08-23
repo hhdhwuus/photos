@@ -26,12 +26,12 @@
 	<div class="grid grid-cols-2" transition:flyAndScale>
 		{#each $albumStore as album}
 			<div class="element">
-				<ion-card on:click={viewAlbum(album.id)}>
+				<ion-card on:click={viewAlbum(album.id)} >
 					<div class="aspect-square w-full">
 						<img
 							alt=""
 							class="h-full w-full object-cover"
-							src={album.images[Math.floor(Math.random() * album.images.length) | 0]}
+							src={album.images.length > 0 ? album.images[Math.floor(Math.random() * album.images.length) | 0] : './placeholder_empty.svg'}
 						/>
 					</div>
 					<ion-card-header>
