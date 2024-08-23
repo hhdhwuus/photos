@@ -238,7 +238,13 @@
 		<!-- Buttons Section -->
 		<div class="dialog-footer">
 			<Button variant="destructive" on:click={addPhotosToAlbum}>Add Photos</Button>
-			<Button variant="outline" on:click={() => (addToAlbumDialog = false)}>Cancel</Button>
+			<Button
+				variant="outline"
+				on:click={() => {
+					addToAlbumDialog = false;
+					selectOption = undefined;
+				}}>Cancel</Button
+			>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
@@ -252,13 +258,7 @@
 		<!-- Buttons Section -->
 		<div class="dialog-footer">
 			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
-			<Button
-				variant="outline"
-				on:click={() => {
-					deleteSelectionDialog = false;
-					selectOption = undefined;
-				}}>Cancel</Button
-			>
+			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
