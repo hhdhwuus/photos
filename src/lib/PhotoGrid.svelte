@@ -19,7 +19,8 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { Photo, PhotosStore } from './photos';
 	import { open } from '$lib/uistore';
-	import { flyAndScale } from './utils';
+	import { flyAndScale, flyUp } from './utils';
+	import { fly } from 'svelte/transition';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
@@ -531,8 +532,8 @@
 	}
 </script>
 
-<ion-content fullscreen bind:this={content}>
-	<div class="z-0 grid grid-cols-3 gap-1" transition:flyAndScale>
+<ion-content fullscreen bind:this={content} transition:fly={flyUp}>
+	<div class="z-0 grid grid-cols-3 gap-1">
 		{#each $photos as photo}
 			<div class="relative aspect-square w-full">
 				{#if !photo?.loaded}
@@ -568,6 +569,11 @@
 			</div>
 		{/each}
 	</div>
+	{#if $photos.length === 0}
+		<div class="flex h-full w-full items-center justify-center">
+			<p class="text-center">No Photos</p>
+		</div>
+	{/if}
 </ion-content>
 <div
 	class="fixed left-0 top-0 z-[-10] h-lvh w-full bg-black p-[var(--ion-safe-area-top)_0_0_0]"
