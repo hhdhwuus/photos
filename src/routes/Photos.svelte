@@ -203,14 +203,19 @@
 			<Dialog.Title>Enter album name</Dialog.Title>
 		</Dialog.Header>
 		<div class="grid gap-4 py-4">
-			<div class="grid grid-cols-4 items-center gap-4">
-				<Label class="text-right">Name</Label>
-				<Input id="name" class="col-span-3" bind:value={albumTitle} />
+			<div class="w-full">
+				<Input
+					id="name"
+					class="col-span-3"
+					name="name"
+					placeholder="Album Name"
+					bind:value={albumTitle}
+				/>
 			</div>
 		</div>
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
-			<Button variant="destructive" on:click={createAlbum}>Create</Button>
+		<div class="dialog-footer grid w-full grid-cols-2">
+			<Button variant="default" on:click={createAlbum}>Create</Button>
 			<Button variant="outline" on:click={() => (createAlbumDialog = false)}>Cancel</Button>
 		</div>
 	</Dialog.Content>
@@ -222,9 +227,9 @@
 			<Dialog.Title>Select Album</Dialog.Title>
 		</Dialog.Header>
 		<div class="grid gap-4 py-4">
-			<div class="grid grid-cols-4 items-center gap-4">
+			<div class="w-full">
 				<Select.Root bind:selected={selectOption}>
-					<Select.Trigger class="w-[180px]">
+					<Select.Trigger class="w-full">
 						<Select.Value placeholder="Select Album" />
 					</Select.Trigger>
 					<Select.Content>
@@ -236,8 +241,8 @@
 			</div>
 		</div>
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
-			<Button variant="destructive" on:click={addPhotosToAlbum}>Add Photos</Button>
+		<div class="dialog-footer grid w-full grid-cols-2">
+			<Button variant="default" on:click={addPhotosToAlbum}>Add Photos</Button>
 			<Button
 				variant="outline"
 				on:click={() => {
@@ -252,11 +257,11 @@
 <Dialog.Root bind:open={deleteSelectionDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+			<Dialog.Title>Delete selected Photos?</Dialog.Title>
 		</Dialog.Header>
 
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
+		<div class="dialog-footer grid w-full grid-cols-2">
 			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
 			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
 		</div>

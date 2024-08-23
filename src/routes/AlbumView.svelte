@@ -156,19 +156,17 @@
 					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
-							<DropdownMenu.Label>Album Options</DropdownMenu.Label>
-							<DropdownMenu.Separator />
 							<DropdownMenu.Item on:click={() => (openEdit = true)}>
 								<FolderPen class="mr-2 h-4 w-4" />
-								<span>Rename</span>
+								<span>Rename Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={() => (openDelete = true)}>
 								<Trash2 class="mr-2 h-4 w-4" />
-								<span>Delete</span>
+								<span>Delete Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={toggleSelectionMode}>
 								<MousePointer2  class="mr-2 h-4 w-4" />
-								<span>Select</span>
+								<span>Select Photos</span>
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
@@ -183,7 +181,7 @@
 						<DropdownMenu.Group>
 							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
 								<Trash2 class="mr-2 h-4 w-4" />
-								<span>Delete from Album</span>
+								<span>Remove from Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>
 								<Share2 class="mr-2 h-4 w-4" />
@@ -217,7 +215,7 @@
 			</div>
 		</div>
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
+		<div class="dialog-footer w-full grid grid-cols-2">
 			<Button on:click={renameAlbum}>Rename</Button>
 			<Button
 				variant="outline"
@@ -233,9 +231,9 @@
 <Dialog.Root bind:open={openDelete}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+			<Dialog.Title>Delete Album?</Dialog.Title>
 		</Dialog.Header>
-		<div class="dialog-footer">
+		<div class="dialog-footer w-full grid grid-cols-2">
 			<Button variant="destructive" on:click={removeAlbumByID}>Delete</Button>
 			<Button variant="outline" on:click={() => (openDelete = false)}>Cancel</Button>
 		</div>
@@ -245,11 +243,11 @@
 <Dialog.Root bind:open={deleteSelectionDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+			<Dialog.Title>Remove selected Photos <br> from {$requestedAlbum.title}?</Dialog.Title>
 		</Dialog.Header>
 
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
+		<div class="dialog-footer w-full grid grid-cols-2">
 			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
 			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
 		</div>

@@ -4,6 +4,7 @@
 	import { changeTab } from '$lib/tabStore';
 
 	import '@ionic/core/css/ionic.bundle.css';
+	import { flyAndScale } from '$lib/utils';
 
 	function viewAlbum(albumId) {
 		changeTab('albumview');
@@ -22,7 +23,7 @@
 </ion-header>
 
 <ion-content fullscreen>
-	<div class="grid grid-cols-2">
+	<div class="grid grid-cols-2" transition:flyAndScale>
 		{#each $albumStore as album}
 			<div class="element">
 				<ion-card on:click={viewAlbum(album.id)}>
@@ -35,7 +36,7 @@
 					</div>
 					<ion-card-header>
 						<ion-card-title>{album.title}</ion-card-title>
-						<ion-card-subtitle>{album.images.length} Items</ion-card-subtitle>
+						<ion-card-subtitle>{album.images.length} {album.images.length === 1 ? "Photo" : "Photos"}</ion-card-subtitle>
 					</ion-card-header>
 				</ion-card>
 			</div>

@@ -18,6 +18,8 @@
 	import AlbumView from './AlbumView.svelte';
 	import { type Writable } from 'svelte/store';
 	import { open } from '$lib/uistore';
+	import { flyAndScale } from '$lib/utils';
+	import { fly } from 'svelte/transition';
 
 	let selectionMode: Writable<boolean>;
 
@@ -74,19 +76,25 @@
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			<Photos bind:isSelectionMode={selectionMode} />
+			{#if $activeTab === 'photos'}
+				<Photos bind:isSelectionMode={selectionMode} />
+			{/if}
 		</ion-tab>
 		<ion-tab tab="album">
-			<Album />
+			{#if $activeTab === 'album'}
+				<Album />
+			{/if}
 		</ion-tab>
 		<ion-tab tab="albumview">
 			{#if $activeTab === 'albumview'}
-				<AlbumView />
+					<AlbumView bind:isSelectionMode={selectionMode} />
 			{/if}
 		</ion-tab>
 		<ion-tab-bar
 			slot="bottom"
-			class="{!$open && !$selectionMode ? '' : 'translate-y-full'} transition-transform duration-300"
+			class="{!$open && !$selectionMode
+				? ''
+				: 'translate-y-full'} transition-transform duration-300"
 		>
 			<ion-tab-button tab="photos">
 				<Images />
@@ -100,5 +108,3 @@
 		</ion-tab-bar>
 	</ion-tabs>
 </ion-app>
-
-

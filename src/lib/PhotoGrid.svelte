@@ -19,6 +19,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { Photo, PhotosStore } from './photos';
 	import { open } from '$lib/uistore';
+	import { flyAndScale } from './utils';
 
 	type Direction = 'right' | 'left' | 'top' | 'down';
 
@@ -531,7 +532,7 @@
 </script>
 
 <ion-content fullscreen bind:this={content}>
-	<div class="z-0 grid grid-cols-3 gap-1">
+	<div class="z-0 grid grid-cols-3 gap-1" transition:flyAndScale>
 		{#each $photos as photo}
 			<div class="relative aspect-square w-full">
 				{#if !photo?.loaded}
