@@ -64,6 +64,6 @@ export const flyAndScale = (
 export const flyUp:FlyParams = {
 	duration: 200,
 	x: 0,
-	y: 10,
+	y: 5,
 	opacity: .5,
 }
