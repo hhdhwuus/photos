@@ -21,21 +21,32 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import * as Select from '$lib/components/ui/select';
 	import PhotoGrid from '$lib/PhotoGrid.svelte';
+
+	interface SelectOption {
+		value: string;
+		label: string;
+		disabled: boolean;
+	}
 
 	let albumTitle: Album['title'];
 	let sharedPhotos: string[] = [];
 	let deleteSelectionDialog: boolean;
 	let createAlbumDialog: boolean;
+	let addToAlbumDialog: boolean;
+	let selectOption: SelectOption;
+
+	let albums: Album[] = [];
+	albumStore.subscribe((value) => {
+		albums = value;
+	});
 
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
-		console.log(new Date(new Date(1723420462406).toISOString()));
 
 		photosStore.init();
 	});
-
-	let opened = false;
 
 	export let isSelectionMode = writable(false);
 	let selectedPhotos = writable<string[]>([]);
@@ -127,13 +138,32 @@
 
 		console.log($albumStore);
 	}
+
+	async function addPhotosToAlbum() {
+		console.log(selectOption.value);
+
+		$selectedPhotos.forEach(async (element) => {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+			if (selectedPhoto) {
+				albumStore.addImageToAlbum(selectOption.value, selectedPhoto.localurl);
+			}
+		});
+
+		if ($isSelectionMode) {
+			selectedPhotos.set([]);
+			toggleSelectionMode();
+		}
+
+		changeTab('album');
+		addToAlbumDialog = false;
+	}
 </script>
 
 <ion-header translucent>
 	<ion-toolbar>
 		<ion-title>Photos</ion-title>
 		{#if $isSelectionMode}
-			<div class="pr-5 pl-5" slot="secondary">
+			<div class="pl-5 pr-5" slot="secondary">
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
@@ -141,6 +171,10 @@
 							<DropdownMenu.Item on:click={() => (createAlbumDialog = true)}>
 								<FolderPlus class="mr-2 h-4 w-4" />
 								<span>Create Album</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={() => (addToAlbumDialog = true)}>
+								<FolderPlus class="mr-2 h-4 w-4" />
+								<span>Add to Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>
 								<Share2 class="mr-2 h-4 w-4" />
@@ -176,6 +210,33 @@
 		<div class="dialog-footer">
 			<Button variant="destructive" on:click={createAlbum}>Create</Button>
 			<Button variant="outline" on:click={() => (createAlbumDialog = false)}>Cancel</Button>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={addToAlbumDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>Select Album</Dialog.Title>
+		</Dialog.Header>
+		<div class="grid gap-4 py-4">
+			<div class="grid grid-cols-4 items-center gap-4">
+				<Select.Root bind:selected={selectOption}>
+					<Select.Trigger class="w-[180px]">
+						<Select.Value placeholder="Select Album" />
+					</Select.Trigger>
+					<Select.Content>
+						{#each $albumStore as album}
+							<Select.Item value={album.id}>{album.title}</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+			</div>
+		</div>
+		<!-- Buttons Section -->
+		<div class="dialog-footer">
+			<Button variant="destructive" on:click={addPhotosToAlbum}>Add Photos</Button>
+			<Button variant="outline" on:click={() => (addToAlbumDialog = false)}>Cancel</Button>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>

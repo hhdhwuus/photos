@@ -49,7 +49,10 @@ export const albumStore = (() => {
 		update((albums) => {
 			const updatedAlbums = albums.map((album) => {
 				if (album.id === albumId) {
-					return { ...album, images: [...album.images, newImage] };
+					// Check if the image already exists in the album
+					if (!album.images.includes(newImage)) {
+						return { ...album, images: [...album.images, newImage] };
+					}
 				}
 				return album;
 			});
