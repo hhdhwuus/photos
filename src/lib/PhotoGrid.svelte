@@ -76,7 +76,7 @@
 	}
 
 	function touchstart(event: TouchEvent) {
-		if (!open) {
+		if (!$open) {
 			return;
 		}
 
@@ -104,7 +104,7 @@
 	}
 
 	function touchmove(event: TouchEvent) {
-		if (!open || !touching) {
+		if (!$open || !touching) {
 			return;
 		}
 		if (!currentElement) {
@@ -158,7 +158,7 @@
 	}
 
 	function touchend(event: TouchEvent) {
-		if (!open) {
+		if (!$open) {
 			return;
 		}
 		touching = false;
@@ -261,7 +261,7 @@
 		currentElement?.removeEventListener('transitionend', transitionEndOpen);
 		currentElement?.removeEventListener('transitionend', transitionEndClose);
 		unsubscribe();
-		if (open) {
+		if ($open) {
 			closePhoto();
 		}
 	});
@@ -567,9 +567,9 @@
 				</div>
 				{#if $isSelectionMode}
 					{#if $selectedPhotos.includes(photo.id)}
-						<CircleCheck class="relative z-[60] fill-white stroke-black" />
+						<CircleCheck class="relative left-0.5 top-0.5 z-[60] fill-white stroke-black" />
 					{:else}
-						<Circle class="relative z-[60] fill-white stroke-black" />
+						<Circle class="relative  left-0.5 top-0.5  z-[60] fill-white stroke-black" />
 					{/if}
 				{/if}
 			</div>
@@ -633,13 +633,13 @@
 <Dialog.Root bind:open={deleteSelectionDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Are you sure absolutely sure?</Dialog.Title>
+			<Dialog.Title>Delete Photo?</Dialog.Title>
 		</Dialog.Header>
 
 		<!-- Buttons Section -->
-		<div class="dialog-footer">
+		<div class="dialog-footer grid w-full grid-cols-2">
 			<Dialog.Close>
-				<Button variant="destructive" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
+				<Button variant="destructive" class="w-full" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
 			</Dialog.Close>
 			<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
 		</div>

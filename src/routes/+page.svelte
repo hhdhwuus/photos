@@ -20,8 +20,10 @@
 	import { open } from '$lib/uistore';
 	import { flyAndScale } from '$lib/utils';
 	import { fly } from 'svelte/transition';
+	import { toast } from "svelte-sonner";
 
 	let selectionMode: Writable<boolean>;
+	let imageAddLoad = false;
 
 	onMount(() => {
 		console.log(tabsElement);
@@ -38,6 +40,7 @@
 		const permissionResponse = await Filesystem.requestPermissions();
 		console.log(permissionResponse.publicStorage); // warum???
 
+		imageAddLoad = true;
 		const image = await Camera.getPhoto({
 			quality: 100,
 			allowEditing: false,
@@ -63,6 +66,7 @@
 			localurl: savedFile.uri
 		};
 		photosStore.add(photo);
+		imageAddLoad = false;
 	}
 
 	function handleTabChange(event: CustomEvent) {
@@ -107,4 +111,5 @@
 			</ion-tab-button>
 		</ion-tab-bar>
 	</ion-tabs>
+	<ion-loading is-open={imageAddLoad} spinner="circles"></ion-loading>
 </ion-app>

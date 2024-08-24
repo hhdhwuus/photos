@@ -8,6 +8,10 @@ PODS:
     - Capacitor
   - CapacitorFilesystem (6.0.1):
     - Capacitor
+  - CapacitorShare (6.0.2):
+    - Capacitor
+  - CapawesomeCapacitorPhotoEditor (6.0.0):
+    - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -15,6 +19,8 @@ DEPENDENCIES:
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
+  - "CapawesomeCapacitorPhotoEditor (from `../../node_modules/@capawesome/capacitor-photo-editor`)"
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -27,6 +33,10 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/device"
   CapacitorFilesystem:
     :path: "../../node_modules/@capacitor/filesystem"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
+  CapawesomeCapacitorPhotoEditor:
+    :path: "../../node_modules/@capawesome/capacitor-photo-editor"
 
 SPEC CHECKSUMS:
   Capacitor: 8941aba4364ba9d1b22188569001f2ce45cc2b00
@@ -34,7 +44,9 @@ SPEC CHECKSUMS:
   CapacitorCordova: 8f2cc8d8d3619c566e9418fe8772064a94266106
   CapacitorDevice: f8fd88f9edd1261c55a109f32015b09bbbfdc4a0
   CapacitorFilesystem: 37fb3aa5c945b4539ab11c74a5c57925a302bf24
+  CapacitorShare: 591ae4693d85686ceb590db8e8b44aa014ec6490
+  CapawesomeCapacitorPhotoEditor: 231e03215f026e0c2eeb6de0910e095e4aa0c823
 
-PODFILE CHECKSUM: 0e963f4eb1e4d612e9d6ad43f4ab51fa88f5299f
+PODFILE CHECKSUM: ddf312e1a4f3d01c94f09e6b1f817bdbc0ed7e49
 
 COCOAPODS: 1.15.2
