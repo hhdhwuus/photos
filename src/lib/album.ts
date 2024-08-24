@@ -50,6 +50,8 @@ export const albumStore = (() => {
 			const updatedAlbums = albums.map((album) => {
 				if (album.id === albumId) {
 					// Check if the image already exists in the album
+					console.log("new",newImage)
+					console.log("test", album.images)
 					if (!album.images.includes(newImage)) {
 						return { ...album, images: [...album.images, newImage] };
 					}

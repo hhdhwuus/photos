@@ -156,6 +156,10 @@
 					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
+							<DropdownMenu.Item on:click={toggleSelectionMode}>
+								<MousePointer2  class="mr-2 h-4 w-4" />
+								<span>Select Photos</span>
+							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={() => (openEdit = true)}>
 								<FolderPen class="mr-2 h-4 w-4" />
 								<span>Rename Album</span>
@@ -163,10 +167,6 @@
 							<DropdownMenu.Item on:click={() => (openDelete = true)}>
 								<Trash2 class="mr-2 h-4 w-4" />
 								<span>Delete Album</span>
-							</DropdownMenu.Item>
-							<DropdownMenu.Item on:click={toggleSelectionMode}>
-								<MousePointer2  class="mr-2 h-4 w-4" />
-								<span>Select Photos</span>
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>

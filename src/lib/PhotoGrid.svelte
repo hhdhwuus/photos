@@ -603,10 +603,6 @@
 				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 				<DropdownMenu.Content>
 					<DropdownMenu.Group>
-						<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
-							<Trash2 class="mr-2 h-4 w-4" />
-							<span>Delete</span>
-						</DropdownMenu.Item>
 						<DropdownMenu.Item on:click={shareCurrentPhoto}>
 							<Share2 class="mr-2 h-4 w-4" />
 							<span>Share</span>
@@ -617,6 +613,10 @@
 								<span>Edit</span>
 							</DropdownMenu.Item>
 						{/if}
+						<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+							<Trash2 class="mr-2 h-4 w-4" />
+							<span>Delete</span>
+						</DropdownMenu.Item>
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
