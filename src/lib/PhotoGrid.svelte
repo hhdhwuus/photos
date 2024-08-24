@@ -174,9 +174,6 @@
 				scaleTransform = 1;
 				zooming = false;
 			}
-			// if ($scaleTransformSpring > 3) {
-			// 	scaleTransform = 3;
-			// }
 
 			let windowHeight = window.innerHeight;
 			let windowWidth = window.innerWidth;
@@ -297,7 +294,7 @@
 	}
 
 	function openPhoto(photo: Photo, event?: MouseEvent | null, element?: Element | null) {
-		console.log(currentElement);
+		console.log("open", photo);
 		if (opened) {
 			return;
 		}
@@ -422,22 +419,31 @@
 
 		const selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
 		const selectedFileUrl = selectedPhoto?.localurl;
-		const selectedFileUrlElement = selectedPhoto?.url;
 
 		if (selectedFileUrl) {
 			imageResetLoad = true;
 			try {
-				const editedImage = await PhotoEditor.editPhoto({ path: selectedFileUrl });
-				console.log(editedImage);
+				await PhotoEditor.editPhoto({ path: selectedFileUrl });
+				await closePhoto();
 
-				// Trigger the image reload
-				const imgElement = document.querySelector(
-					`img[src="${selectedFileUrlElement}"]`
-				) as HTMLImageElement;
-				if (imgElement) {
-					const newSrc = `${selectedFileUrlElement}?t=${new Date().getTime()}`;
-					imgElement.src = newSrc;
+				console.log(selectedPhoto.id)
+
+				photosStore.remove(selectedPhoto.id);
+
+				let photo: Photo = {
+					id: crypto.randomUUID(),
+					date: selectedPhoto.date,
+					url: Capacitor.convertFileSrc(selectedFileUrl) + `?t=${Date.now()}`,
+					localurl: selectedFileUrl
+				};
+				await photosStore.add(photo);
+
+				const element = content.querySelector(`img[src="${photo.url}"]`)?.parentElement;
+				console.log(photo)
+				if (photo) {
+					openPhoto(photo, undefined, element);
 				}
+
 				imageResetLoad = false;
 			} catch (error) {
 				imageResetLoad = false;
