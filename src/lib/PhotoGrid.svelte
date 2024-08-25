@@ -433,7 +433,7 @@
 			}
 			console.log(selectedPhoto.id);
 
-			photosStore.remove(selectedPhoto.id);
+			
 
 			// let photo: Photo = {
 			// 	id: crypto.randomUUID(),
@@ -453,7 +453,7 @@
 
 			console.log('img element', img);
 
-			img.src = selectedFileUrl.split('?')[0] + `?t=${Date.now()}`;
+			img.src = img.src.split('?')[0] + `?t=${Date.now()}`;
 
 			img.onload = () => {
 				if (!currentElement) {
