@@ -114,5 +114,5 @@
 			</ion-tab-button>
 		</ion-tab-bar>
 	</ion-tabs>
-	<ion-loading is-open={imageAddLoad} spinner="circles"></ion-loading>
+	<ion-loading is-open={imageAddLoad} message="Loading" spinner="circles"></ion-loading>
 </ion-app>
