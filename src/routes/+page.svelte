@@ -41,35 +41,38 @@
 
 	async function addPhoto() {
 		const permissionResponse = await Filesystem.requestPermissions();
-		console.log(permissionResponse.publicStorage); // warum???
+		console.log(permissionResponse.publicStorage);
+		try {
+			imageAddLoad = true;
+			const image = await Camera.getPhoto({
+				quality: 100,
+				allowEditing: false,
+				resultType: CameraResultType.Base64,
+				source: CameraSource.Camera
+			});
 
-		imageAddLoad = true;
-		const image = await Camera.getPhoto({
-			quality: 100,
-			allowEditing: false,
-			resultType: CameraResultType.Base64,
-			source: CameraSource.Camera
-		});
+			if (image.base64String === undefined) {
+				return;
+			}
 
-		if (image.base64String === undefined) {
-			return;
+			const fileName = Date.now() + '.jpeg';
+			const savedFile = await Filesystem.writeFile({
+				directory: Directory.External,
+				path: fileName,
+				data: image.base64String
+			});
+
+			let photo: Photo = {
+				id: crypto.randomUUID(),
+				date: new Date(),
+				url: Capacitor.convertFileSrc(savedFile.uri),
+				localurl: savedFile.uri
+			};
+			photosStore.add(photo);
+			imageAddLoad = false;
+		} catch {
+			imageAddLoad = false;
 		}
-
-		const fileName = Date.now() + '.jpeg';
-		const savedFile = await Filesystem.writeFile({
-			directory: Directory.External,
-			path: fileName,
-			data: image.base64String
-		});
-
-		let photo: Photo = {
-			id: crypto.randomUUID(),
-			date: new Date(),
-			url: Capacitor.convertFileSrc(savedFile.uri),
-			localurl: savedFile.uri
-		};
-		photosStore.add(photo);
-		imageAddLoad = false;
 	}
 
 	function handleTabChange(event: CustomEvent) {
