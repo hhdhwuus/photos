@@ -116,7 +116,7 @@
 		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
 			if (selectedPhoto) {
-				albumImages.push(selectedPhoto?.url);
+				albumImages.push(selectedPhoto?.url.split("?")[0]);
 			}
 		});
 		const newAlbum = {
