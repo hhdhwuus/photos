@@ -21,7 +21,7 @@
 	import { open } from '$lib/uistore';
 	import { flyAndScale } from '$lib/utils';
 	import { fly } from 'svelte/transition';
-	import { toast } from "svelte-sonner";
+	import { toast } from 'svelte-sonner';
 
 	let selectionMode: Writable<boolean>;
 	let imageAddLoad = false;
@@ -32,14 +32,12 @@
 			if (tabsElement) {
 				if (tabName) {
 					tabsElement.select(tabName);
-
 				}
 			}
 		});
 
 		albumStore.loadAlbums();
 	});
-
 
 	async function addPhoto() {
 		const permissionResponse = await Filesystem.requestPermissions();
@@ -82,13 +80,10 @@
 	let tabsElement: HTMLIonTabsElement | null;
 </script>
 
-
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			
-				<Photos bind:isSelectionMode={selectionMode} />
-			
+			<Photos bind:isSelectionMode={selectionMode} />
 		</ion-tab>
 		<ion-tab tab="album">
 			{#if $activeTab === 'album'}
@@ -97,7 +92,7 @@
 		</ion-tab>
 		<ion-tab tab="albumview">
 			{#if $activeTab === 'albumview'}
-					<AlbumView bind:isSelectionMode={selectionMode} />
+				<AlbumView bind:isSelectionMode={selectionMode} />
 			{/if}
 		</ion-tab>
 		<ion-tab-bar

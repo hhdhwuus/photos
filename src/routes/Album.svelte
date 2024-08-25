@@ -23,7 +23,7 @@
 	</ion-toolbar>
 </ion-header>
 
-<ion-content fullscreen transition:fly={flyUp}>
+<ion-content fullscreen>
 	<div class="grid grid-cols-2">
 		{#each $albumStore as album}
 			<div class="element">

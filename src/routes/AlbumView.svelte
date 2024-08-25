@@ -22,7 +22,7 @@
 
 	import { ArrowLeft } from 'lucide-svelte';
 
-	import { Camera as CameraIcon, FolderPen, Share2, Trash2, MousePointer2  } from 'lucide-svelte';
+	import { Camera as CameraIcon, FolderPen, Share2, Trash2, MousePointer2 } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import PhotoGrid from '$lib/PhotoGrid.svelte';
@@ -52,7 +52,6 @@
 
 	onMount(async () => {
 		const platform = Capacitor.getPlatform();
-
 	});
 
 	onDestroy(() => {
@@ -60,7 +59,6 @@
 		unsubscribe();
 		unsubscribeAlbum();
 	});
-
 
 	export let isSelectionMode = writable(false);
 
@@ -70,8 +68,8 @@
 	}
 
 	async function handleDeleteSelectedPhoto() {
-		console.log($requestedAlbum.id)
-		console.log(selectedPhotos)
+		console.log($requestedAlbum.id);
+		console.log(selectedPhotos);
 		deleteSelectionDialog = false;
 		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
@@ -80,7 +78,7 @@
 
 			if (selectedFileUrl) {
 				albumStore.removeImageFromAlbum($requestedAlbum.id, selectedFileUrl);
-				console.log($photosStore.filter((photo) => $requestedAlbum?.images.includes(photo.url)))
+				console.log($photosStore.filter((photo) => $requestedAlbum?.images.includes(photo.url)));
 			}
 		});
 
@@ -89,40 +87,33 @@
 	}
 
 	async function shareSelectedPhoto() {
-		// Alle asynchronen Operationen sammeln
-		if (!currentElement) {
-			const photoPromises = $selectedPhotos.map(async (element) => {
-				let selectedPhoto = $photosStore.find((photo) => photo.id === element);
-				console.log('Photo:', JSON.stringify(selectedPhoto));
-				const selectedFileUrl = selectedPhoto?.localurl;
-
-				console.log('FileUrl:', selectedFileUrl);
-				if (selectedFileUrl) {
-					sharedPhotos.push(selectedFileUrl);
-				}
-			});
-
-			// Warten bis alle asynchronen Operationen abgeschlossen sind
-			await Promise.all(photoPromises);
-		} else {
-			let selectedPhoto = $photosStore.find((photo) => photo.id === currentElement?.id);
+		const photoPromises = $selectedPhotos.map(async (element) => {
+			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
+			console.log('Photo:', JSON.stringify(selectedPhoto));
 			const selectedFileUrl = selectedPhoto?.localurl;
+
+			console.log('FileUrl:', selectedFileUrl);
 			if (selectedFileUrl) {
 				sharedPhotos.push(selectedFileUrl);
 			}
-		}
+		});
+
+		// Warten bis alle asynchronen Operationen abgeschlossen sind
+		await Promise.all(photoPromises);
 
 		console.log('List', sharedPhotos);
 
-		await Share.share({
-			files: sharedPhotos
-		});
-
-		// Listen und Status zurücksetzen
-		sharedPhotos = [];
-		if ($isSelectionMode) {
-			selectedPhotos.set([]);
-			toggleSelectionMode();
+		try {
+			await Share.share({
+				files: sharedPhotos
+			});
+			sharedPhotos = [];
+			if ($isSelectionMode) {
+				selectedPhotos.set([]);
+				toggleSelectionMode();
+			}
+		} catch {
+			sharedPhotos = [];
 		}
 	}
 
@@ -157,7 +148,7 @@
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
 							<DropdownMenu.Item on:click={toggleSelectionMode}>
-								<MousePointer2  class="mr-2 h-4 w-4" />
+								<MousePointer2 class="mr-2 h-4 w-4" />
 								<span>Select Photos</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={() => (openEdit = true)}>
@@ -191,9 +182,7 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</div>
-			<ion-buttons class="pr-5" slot="primary" on:click={toggleSelectionMode}>
-				Cancel
-			</ion-buttons>
+			<ion-buttons class="pr-5" slot="primary" on:click={toggleSelectionMode}> Cancel </ion-buttons>
 		{/if}
 	</ion-toolbar>
 </ion-header>
@@ -209,13 +198,13 @@
 				<Input
 					id="name"
 					class="col-span-3"
-					placeholder={requestedAlbum.title}
+					placeholder={$requestedAlbum.title}
 					bind:value={newAlbumName}
 				/>
 			</div>
 		</div>
 		<!-- Buttons Section -->
-		<div class="dialog-footer w-full grid grid-cols-2">
+		<div class="dialog-footer grid w-full grid-cols-2">
 			<Button on:click={renameAlbum}>Rename</Button>
 			<Button
 				variant="outline"
@@ -233,7 +222,7 @@
 		<Dialog.Header>
 			<Dialog.Title>Delete Album?</Dialog.Title>
 		</Dialog.Header>
-		<div class="dialog-footer w-full grid grid-cols-2">
+		<div class="dialog-footer grid w-full grid-cols-2">
 			<Button variant="destructive" on:click={removeAlbumByID}>Delete</Button>
 			<Button variant="outline" on:click={() => (openDelete = false)}>Cancel</Button>
 		</div>
@@ -243,11 +232,11 @@
 <Dialog.Root bind:open={deleteSelectionDialog}>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Remove selected Photos <br> from {$requestedAlbum.title}?</Dialog.Title>
+			<Dialog.Title>Remove selected Photos <br /> from {$requestedAlbum.title}?</Dialog.Title>
 		</Dialog.Header>
 
 		<!-- Buttons Section -->
-		<div class="dialog-footer w-full grid grid-cols-2">
+		<div class="dialog-footer grid w-full grid-cols-2">
 			<Button variant="destructive" on:click={handleDeleteSelectedPhoto}>Delete</Button>
 			<Button variant="outline" on:click={() => (deleteSelectionDialog = false)}>Cancel</Button>
 		</div>

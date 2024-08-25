@@ -16,7 +16,14 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 
-	import { Camera as CameraIcon, FolderPen, Images, Share2, Trash2, FolderInput  } from 'lucide-svelte';
+	import {
+		Camera as CameraIcon,
+		FolderPen,
+		Images,
+		Share2,
+		Trash2,
+		FolderInput
+	} from 'lucide-svelte';
 	import { FolderPlus } from 'lucide-svelte';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -99,15 +106,17 @@
 
 		console.log('List', sharedPhotos);
 
-		await Share.share({
-			files: sharedPhotos
-		});
-
-		// Listen und Status zurücksetzen
-		sharedPhotos = [];
-		if ($isSelectionMode) {
-			selectedPhotos.set([]);
-			toggleSelectionMode();
+		try {
+			await Share.share({
+				files: sharedPhotos
+			});
+			sharedPhotos = [];
+			if ($isSelectionMode) {
+				selectedPhotos.set([]);
+				toggleSelectionMode();
+			}
+		} catch {
+			sharedPhotos = [];
 		}
 	}
 
@@ -116,7 +125,7 @@
 		$selectedPhotos.forEach(async (element) => {
 			let selectedPhoto = $photosStore.find((photo) => photo.id === element);
 			if (selectedPhoto) {
-				albumImages.push(selectedPhoto?.url.split("?")[0]);
+				albumImages.push(selectedPhoto?.url.split('?')[0]);
 			}
 		});
 		const newAlbum = {
@@ -175,7 +184,7 @@
 								<span>Create Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={() => (addToAlbumDialog = true)}>
-								<FolderInput  class="mr-2 h-4 w-4" />
+								<FolderInput class="mr-2 h-4 w-4" />
 								<span>Add to Album</span>
 							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>

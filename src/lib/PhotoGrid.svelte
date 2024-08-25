@@ -583,7 +583,7 @@
 	}
 </script>
 
-<ion-content fullscreen bind:this={content} transition:fly={flyUp}>
+<ion-content fullscreen bind:this={content}>
 	<div class="z-0 grid grid-cols-3 gap-1">
 		{#each $photos as photo}
 			<div class="relative aspect-square w-full">
@@ -650,27 +650,29 @@
 
 		<ion-loading is-open={imageResetLoad} message="Loading..." spinner="circles"></ion-loading>
 		<div class="relative flex flex-row justify-between gap-4">
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						<DropdownMenu.Item on:click={shareCurrentPhoto}>
-							<Share2 class="mr-2 h-4 w-4" />
-							<span>Share</span>
-						</DropdownMenu.Item>
-						{#if platform === 'android' && $activeTab != 'albumview'}
-							<DropdownMenu.Item on:click={editCurrentPhoto}>
-								<SquarePen class="mr-2 h-4 w-4" />
-								<span>Edit</span>
+			{#if $activeTab != 'albumview'}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							<DropdownMenu.Item on:click={shareCurrentPhoto}>
+								<Share2 class="mr-2 h-4 w-4" />
+								<span>Share</span>
 							</DropdownMenu.Item>
-						{/if}
-						<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
-							<Trash2 class="mr-2 h-4 w-4" />
-							<span>Delete</span>
-						</DropdownMenu.Item>
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
+							{#if platform === 'android' && $activeTab != 'albumview'}
+								<DropdownMenu.Item on:click={editCurrentPhoto}>
+									<SquarePen class="mr-2 h-4 w-4" />
+									<span>Edit</span>
+								</DropdownMenu.Item>
+							{/if}
+							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Delete</span>
+							</DropdownMenu.Item>
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
 		</div>
 	</div>
 </div>
