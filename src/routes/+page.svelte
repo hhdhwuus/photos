@@ -32,12 +32,14 @@
 			if (tabsElement) {
 				if (tabName) {
 					tabsElement.select(tabName);
+
 				}
 			}
 		});
 
 		albumStore.loadAlbums();
 	});
+
 
 	async function addPhoto() {
 		const permissionResponse = await Filesystem.requestPermissions();
@@ -79,6 +81,7 @@
 
 	let tabsElement: HTMLIonTabsElement | null;
 </script>
+
 
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
