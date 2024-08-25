@@ -43,6 +43,7 @@
 	let touching = false;
 	let zooming = false;
 	let rect = { top: 0, left: 0, width: 0, height: 0 };
+	let originRect = { top: 0, left: 0, width: 0, height: 0 };
 	let initialZoomDistance = 0;
 	let lastZoomScale = 1;
 	let zoomOrigin = [50, 50];
@@ -320,6 +321,7 @@
 		console.log('tets');
 		$open = true;
 		rect = currentElement.getBoundingClientRect();
+		originRect = currentElement.getBoundingClientRect();
 		console.log(currentElement);
 		let img = new Image();
 
@@ -346,9 +348,9 @@
 				let height = windowWidth / imgRatio;
 				currentElement.style.width = windowWidth + 'px';
 				currentElement.style.height = height + 'px';
-				currentElement.style.left = -rect.left + 'px';
+				currentElement.style.left = -originRect.left + 'px';
 				currentElement.style.top =
-					Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
+					Math.max((windowHeight - height + topPadding) / 2, topPadding) - originRect.top + 'px';
 				// top to bottom
 			} else {
 				let height = windowHeight;
@@ -433,8 +435,6 @@
 			}
 			console.log(selectedPhoto.id);
 
-			
-
 			// let photo: Photo = {
 			// 	id: crypto.randomUUID(),
 			// 	date: selectedPhoto.date,
@@ -452,10 +452,11 @@
 			}
 
 			console.log('img element', img);
-
 			img.src = img.src.split('?')[0] + `?t=${Date.now()}`;
-			rect = currentElement.getBoundingClientRect();
-			img.onload = () => {
+			let imgEdited = new Image();
+			imgEdited.src = img.src;
+
+			imgEdited.onload = () => {
 				if (!currentElement) {
 					return;
 				}
@@ -467,7 +468,7 @@
 				let windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
 				let windowWidth = window.innerWidth;
 				let windowRatio = windowWidth / windowHeight;
-				imgRatio = img.width / img.height;
+				imgRatio = imgEdited.width / imgEdited.height;
 				content.scrollY = false;
 				fullscreenOverlay.style.zIndex = '40';
 				fullscreenOverlayOpacity.set(1);
@@ -477,17 +478,17 @@
 					let height = windowWidth / imgRatio;
 					currentElement.style.width = windowWidth + 'px';
 					currentElement.style.height = height + 'px';
-					currentElement.style.left = -rect.left + 'px';
+					currentElement.style.left = -originRect.left + 'px';
 					currentElement.style.top =
-						Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
+						Math.max((windowHeight - height + topPadding) / 2, topPadding) - originRect.top + 'px';
 					// top to bottom
 				} else {
 					let height = windowHeight;
 					let width = height * imgRatio;
 					currentElement.style.width = width + 'px';
 					currentElement.style.height = height + 'px';
-					currentElement.style.left = (windowWidth - width) / 2 - rect.left + 'px';
-					currentElement.style.top = topPadding - rect.top + 'px';
+					currentElement.style.left = (windowWidth - width) / 2 - originRect.left + 'px';
+					currentElement.style.top = topPadding - originRect.top + 'px';
 				}
 				currentElement.removeEventListener('transitionend', transitionEndClose);
 				currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
@@ -542,7 +543,7 @@
 		const nextPhoto = photos[nextIndex];
 		currentPhoto = nextPhoto;
 
-		const element = content.querySelector(`img[src="${nextPhoto.url}"]`)?.parentElement;
+		const element = content.querySelector(`img[src*="${nextPhoto.url}"]`)?.parentElement;
 
 		if (nextPhoto) {
 			openPhoto(nextPhoto, undefined, element);
@@ -598,7 +599,7 @@
 						: (event) => openPhoto(photo, event)}
 				>
 					<img
-						src={photo.url}
+						src={photo.url + `?t=${Date.now()}`}
 						class="h-full w-full object-cover"
 						on:load|once={(event) => {
 							photo.loaded = true;

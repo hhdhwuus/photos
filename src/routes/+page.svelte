@@ -86,9 +86,9 @@
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			{#if $activeTab === 'photos'}
+			
 				<Photos bind:isSelectionMode={selectionMode} />
-			{/if}
+			
 		</ion-tab>
 		<ion-tab tab="album">
 			{#if $activeTab === 'album'}
