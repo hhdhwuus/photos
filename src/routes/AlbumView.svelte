@@ -179,13 +179,13 @@
 					<DropdownMenu.Trigger>Options</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
-							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
-								<Trash2 class="mr-2 h-4 w-4" />
-								<span>Remove from Album</span>
-							</DropdownMenu.Item>
 							<DropdownMenu.Item on:click={shareSelectedPhoto}>
 								<Share2 class="mr-2 h-4 w-4" />
 								<span>Share</span>
+							</DropdownMenu.Item>
+							<DropdownMenu.Item on:click={() => (deleteSelectionDialog = true)}>
+								<Trash2 class="mr-2 h-4 w-4" />
+								<span>Remove from Album</span>
 							</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>

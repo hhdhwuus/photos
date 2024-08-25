@@ -5,7 +5,8 @@
 	import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 	import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
-	import { photosStore, type Photo } from '$lib/photos';
+	import { photosStore } from '$lib/photos';
+	import { albumStore } from '$lib/album';
 	import { activeTab } from '$lib/tabStore';
 	import { changeTab } from '$lib/tabStore';
 
@@ -34,6 +35,8 @@
 				}
 			}
 		});
+
+		albumStore.loadAlbums();
 	});
 
 	async function addPhoto() {

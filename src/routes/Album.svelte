@@ -33,7 +33,7 @@
 							alt=""
 							class="h-full w-full object-cover"
 							src={album.images.length > 0
-								? album.images[Math.floor(Math.random() * album.images.length) | 0]
+								? album.images[Math.floor(Math.random() * album.images.length) | 0] + `?t=${Date.now()}`
 								: './placeholder_empty.svg'}
 						/>
 					</div>

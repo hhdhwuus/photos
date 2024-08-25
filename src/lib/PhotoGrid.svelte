@@ -5,6 +5,8 @@
 
 	import { albumStore, type Album } from '$lib/album';
 
+	import { activeTab } from '$lib/tabStore'
+
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding, type FileInfo } from '@capacitor/filesystem';
 	import { Share } from '@capacitor/share';
@@ -13,6 +15,7 @@
 	import '@ionic/core/css/ionic.bundle.css';
 	import { CircleCheck, Trash2, ArrowLeft, Share2, SquarePen } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
+
 
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from './components/ui/button';
@@ -433,12 +436,15 @@
 				let photo: Photo = {
 					id: crypto.randomUUID(),
 					date: selectedPhoto.date,
-					url: Capacitor.convertFileSrc(selectedFileUrl) + `?t=${Date.now()}`,
+					url: Capacitor.convertFileSrc(selectedFileUrl),
 					localurl: selectedFileUrl
 				};
 				await photosStore.add(photo);
 
-				const element = content.querySelector(`img[src="${photo.url}"]`)?.parentElement;
+	
+
+				const element = content.querySelector(`img[src*="${photo.url}"]`)?.parentElement;
+				console.log(element)
 				console.log(photo)
 				if (photo) {
 					openPhoto(photo, undefined, element);
@@ -554,7 +560,7 @@
 						: (event) => openPhoto(photo, event)}
 				>
 					<img
-						src={photo.url}
+						src={photo.url+`?t=${Date.now()}`}
 						class="h-full w-full object-cover"
 						on:load|once={(event) => {
 							photo.loaded = true;
@@ -613,7 +619,7 @@
 							<Share2 class="mr-2 h-4 w-4" />
 							<span>Share</span>
 						</DropdownMenu.Item>
-						{#if platform === 'android'}
+						{#if platform === 'android' && $activeTab !='albumview'}
 							<DropdownMenu.Item on:click={editCurrentPhoto}>
 								<SquarePen class="mr-2 h-4 w-4" />
 								<span>Edit</span>
