@@ -70,6 +70,7 @@
 			};
 			photosStore.add(photo);
 			imageAddLoad = false;
+			changeTab('photos');
 		} catch {
 			imageAddLoad = false;
 		}
