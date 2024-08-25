@@ -454,7 +454,7 @@
 			console.log('img element', img);
 
 			img.src = img.src.split('?')[0] + `?t=${Date.now()}`;
-
+			rect = currentElement.getBoundingClientRect();
 			img.onload = () => {
 				if (!currentElement) {
 					return;
