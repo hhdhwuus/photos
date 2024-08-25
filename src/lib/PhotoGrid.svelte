@@ -5,7 +5,7 @@
 
 	import { albumStore, type Album } from '$lib/album';
 
-	import { activeTab } from '$lib/tabStore'
+	import { activeTab } from '$lib/tabStore';
 
 	import { Capacitor } from '@capacitor/core';
 	import { Filesystem, Directory, Encoding, type FileInfo } from '@capacitor/filesystem';
@@ -15,7 +15,6 @@
 	import '@ionic/core/css/ionic.bundle.css';
 	import { CircleCheck, Trash2, ArrowLeft, Share2, SquarePen } from 'lucide-svelte';
 	import { Circle } from 'lucide-svelte';
-
 
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from './components/ui/button';
@@ -297,7 +296,7 @@
 	}
 
 	function openPhoto(photo: Photo, event?: MouseEvent | null, element?: Element | null) {
-		console.log("open", photo);
+		console.log('open', photo);
 		if (opened) {
 			return;
 		}
@@ -420,41 +419,80 @@
 			return;
 		}
 
-		const selectedPhoto = $photosStore.find((photo) => photo.id === currentPhoto?.id);
+		const selectedPhoto = currentPhoto;
 		const selectedFileUrl = selectedPhoto?.localurl;
 
 		if (selectedFileUrl) {
 			imageResetLoad = true;
 			try {
 				await PhotoEditor.editPhoto({ path: selectedFileUrl });
-				await closePhoto();
-
-				console.log(selectedPhoto.id)
-
-				photosStore.remove(selectedPhoto.id);
-
-				let photo: Photo = {
-					id: crypto.randomUUID(),
-					date: selectedPhoto.date,
-					url: Capacitor.convertFileSrc(selectedFileUrl),
-					localurl: selectedFileUrl
-				};
-				await photosStore.add(photo);
-
-	
-
-				const element = content.querySelector(`img[src*="${photo.url}"]`)?.parentElement;
-				console.log(element)
-				console.log(photo)
-				if (photo) {
-					openPhoto(photo, undefined, element);
-				}
-
-				imageResetLoad = false;
+				//await closePhoto();
 			} catch (error) {
 				imageResetLoad = false;
 				console.error('Error editing photo:', error);
 			}
+			console.log(selectedPhoto.id);
+
+			photosStore.remove(selectedPhoto.id);
+
+			// let photo: Photo = {
+			// 	id: crypto.randomUUID(),
+			// 	date: selectedPhoto.date,
+			// 	url: Capacitor.convertFileSrc(selectedFileUrl),
+			// 	localurl: selectedFileUrl
+			// };
+			// await photosStore.add(photo);
+
+			// const element = content.querySelector(`img[src*="${photo.url}"]`)?.parentElement;
+			const img = currentElement.querySelector('img');
+
+			if (!img) {
+				console.log('img element not found');
+				return;
+			}
+
+			console.log('img element', img);
+
+			img.src = selectedFileUrl.split('?')[0] + `?t=${Date.now()}`;
+
+			img.onload = () => {
+				if (!currentElement) {
+					return;
+				}
+				let topPadding =
+					(fullscreenControlsHeight ?? 0) +
+					parseInt(
+						getComputedStyle(document.documentElement).getPropertyValue('--ion-safe-area-top')
+					);
+				let windowHeight = window.innerHeight - topPadding - ionSafeAreaBottom;
+				let windowWidth = window.innerWidth;
+				let windowRatio = windowWidth / windowHeight;
+				imgRatio = img.width / img.height;
+				content.scrollY = false;
+				fullscreenOverlay.style.zIndex = '40';
+				fullscreenOverlayOpacity.set(1);
+				currentElement.style.zIndex = '50';
+				// left to right
+				if (imgRatio > windowRatio) {
+					let height = windowWidth / imgRatio;
+					currentElement.style.width = windowWidth + 'px';
+					currentElement.style.height = height + 'px';
+					currentElement.style.left = -rect.left + 'px';
+					currentElement.style.top =
+						Math.max((windowHeight - height + topPadding) / 2, topPadding) - rect.top + 'px';
+					// top to bottom
+				} else {
+					let height = windowHeight;
+					let width = height * imgRatio;
+					currentElement.style.width = width + 'px';
+					currentElement.style.height = height + 'px';
+					currentElement.style.left = (windowWidth - width) / 2 - rect.left + 'px';
+					currentElement.style.top = topPadding - rect.top + 'px';
+				}
+				currentElement.removeEventListener('transitionend', transitionEndClose);
+				currentElement.addEventListener('transitionend', transitionEndOpen, { once: true });
+				imageResetLoad = false;
+			};
 		}
 	}
 
@@ -560,7 +598,7 @@
 						: (event) => openPhoto(photo, event)}
 				>
 					<img
-						src={photo.url+`?t=${Date.now()}`}
+						src={photo.url}
 						class="h-full w-full object-cover"
 						on:load|once={(event) => {
 							photo.loaded = true;
@@ -619,7 +657,7 @@
 							<Share2 class="mr-2 h-4 w-4" />
 							<span>Share</span>
 						</DropdownMenu.Item>
-						{#if platform === 'android' && $activeTab !='albumview'}
+						{#if platform === 'android' && $activeTab != 'albumview'}
 							<DropdownMenu.Item on:click={editCurrentPhoto}>
 								<SquarePen class="mr-2 h-4 w-4" />
 								<span>Edit</span>
@@ -645,7 +683,9 @@
 		<!-- Buttons Section -->
 		<div class="dialog-footer grid w-full grid-cols-2">
 			<Dialog.Close>
-				<Button variant="destructive" class="w-full" on:click={deleteCurrentPhotoConfirmed}>Delete</Button>
+				<Button variant="destructive" class="w-full" on:click={deleteCurrentPhotoConfirmed}
+					>Delete</Button
+				>
 			</Dialog.Close>
 			<Dialog.Close><Button variant="outline">Cancel</Button></Dialog.Close>
 		</div>
