@@ -170,6 +170,13 @@
 			}
 			if ($scaleTransformSpring < 0.7) {
 				closePhoto();
+				touchTransform = [0, 0];
+				scaleTransform = 1;
+
+				touchTransformSpring.set(touchTransform);
+				scaleTransformSpring.set(scaleTransform);
+
+				touchDistance.set(0);
 				return;
 			}
 			if ($scaleTransformSpring < 1) {
@@ -432,8 +439,6 @@
 				console.error('Error editing photo:', error);
 			}
 			console.log(selectedPhoto.id);
-
-			
 
 			// let photo: Photo = {
 			// 	id: crypto.randomUUID(),
