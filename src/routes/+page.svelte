@@ -21,7 +21,7 @@
 	import { open } from '$lib/uistore';
 	import { flyAndScale } from '$lib/utils';
 	import { fly } from 'svelte/transition';
-	import { toast } from "svelte-sonner";
+	import { toast } from 'svelte-sonner';
 
 	let selectionMode: Writable<boolean>;
 	let imageAddLoad = false;
@@ -32,7 +32,6 @@
 			if (tabsElement) {
 				if (tabName) {
 					tabsElement.select(tabName);
-
 				}
 			}
 		});
@@ -40,38 +39,41 @@
 		albumStore.loadAlbums();
 	});
 
-
 	async function addPhoto() {
 		const permissionResponse = await Filesystem.requestPermissions();
-		console.log(permissionResponse.publicStorage); // warum???
+		console.log(permissionResponse.publicStorage);
+		try {
+			imageAddLoad = true;
+			const image = await Camera.getPhoto({
+				quality: 100,
+				allowEditing: false,
+				resultType: CameraResultType.Base64,
+				source: CameraSource.Camera
+			});
 
-		imageAddLoad = true;
-		const image = await Camera.getPhoto({
-			quality: 100,
-			allowEditing: false,
-			resultType: CameraResultType.Base64,
-			source: CameraSource.Camera
-		});
+			if (image.base64String === undefined) {
+				return;
+			}
 
-		if (image.base64String === undefined) {
-			return;
+			const fileName = Date.now() + '.jpeg';
+			const savedFile = await Filesystem.writeFile({
+				directory: Directory.External,
+				path: fileName,
+				data: image.base64String
+			});
+
+			let photo: Photo = {
+				id: crypto.randomUUID(),
+				date: new Date(),
+				url: Capacitor.convertFileSrc(savedFile.uri),
+				localurl: savedFile.uri
+			};
+			photosStore.add(photo);
+			imageAddLoad = false;
+			changeTab('photos');
+		} catch {
+			imageAddLoad = false;
 		}
-
-		const fileName = Date.now() + '.jpeg';
-		const savedFile = await Filesystem.writeFile({
-			directory: Directory.External,
-			path: fileName,
-			data: image.base64String
-		});
-
-		let photo: Photo = {
-			id: crypto.randomUUID(),
-			date: new Date(),
-			url: Capacitor.convertFileSrc(savedFile.uri),
-			localurl: savedFile.uri
-		};
-		photosStore.add(photo);
-		imageAddLoad = false;
 	}
 
 	function handleTabChange(event: CustomEvent) {
@@ -82,13 +84,10 @@
 	let tabsElement: HTMLIonTabsElement | null;
 </script>
 
-
 <ion-app>
 	<ion-tabs bind:this={tabsElement} on:ionTabsDidChange={handleTabChange}>
 		<ion-tab tab="photos">
-			{#if $activeTab === 'photos'}
-				<Photos bind:isSelectionMode={selectionMode} />
-			{/if}
+			<Photos bind:isSelectionMode={selectionMode} />
 		</ion-tab>
 		<ion-tab tab="album">
 			{#if $activeTab === 'album'}
@@ -97,7 +96,7 @@
 		</ion-tab>
 		<ion-tab tab="albumview">
 			{#if $activeTab === 'albumview'}
-					<AlbumView bind:isSelectionMode={selectionMode} />
+				<AlbumView bind:isSelectionMode={selectionMode} />
 			{/if}
 		</ion-tab>
 		<ion-tab-bar
